@@ -3,14 +3,20 @@ import path from 'node:path';
 import postgres from 'postgres';
 
 /**
- * PPR NADI — Staging Cloud Migration Runner
- * Applies migrations in order to the verified staging Supabase database.
- * 
- * Safety guards:
- * - Refuses to run if target DB is not confirmed staging.
- * - Never touches local DB.
- * - Idempotent execution.
+ * PPR NADI — Staging Cloud Database Migration Runner
+ * Strictly verifies project identity against mhtlcvvqwxkhkeqhzbrk.
+ * Compatible with Supabase direct connection and Supavisor pooler connection strings.
+ * Records migration history in supabase_migrations.schema_migrations for full Supabase consistency.
  */
+
+// Load .env.staging.local if present
+if (fs.existsSync('.env.staging.local')) {
+  try {
+    process.loadEnvFile('.env.staging.local');
+  } catch {}
+}
+
+const ALLOWED_PROJECT_REF = 'mhtlcvvqwxkhkeqhzbrk';
 
 const MIGRATIONS = [
   '20261016160000_core_schema.sql',
@@ -24,62 +30,126 @@ const MIGRATIONS = [
   '20261019160000_desa_rejang_demo_estate.sql'
 ];
 
-export async function runStagingMigrations(dbUrl, expectedRef) {
+export function validateStagingDatabaseUrl(dbUrl, expectedRef = ALLOWED_PROJECT_REF) {
   if (!dbUrl) {
-    throw new Error('STAGING_DATABASE_URL is required.');
+    throw new Error('STAGING_DATABASE_URL is required in environment.');
   }
 
-  // Safety check: Ensure URL contains the expected staging project ref or host
-  if (expectedRef && !dbUrl.includes(expectedRef)) {
-    throw new Error(`Safety Violation: STAGING_DATABASE_URL does not match expected project ref [${expectedRef}]. Aborting.`);
+  let parsed;
+  try {
+    parsed = new URL(dbUrl);
+  } catch (err) {
+    throw new Error('STAGING_DATABASE_URL is not a valid URI: ' + err.message);
   }
 
-  // Prevent running against local DB by accident
-  if (dbUrl.includes('127.0.0.1:64322') || dbUrl.includes('localhost:64322')) {
-    throw new Error('Safety Violation: STAGING_DATABASE_URL is pointing to local database port 64322! Aborting.');
+  if (parsed.protocol !== 'postgres:' && parsed.protocol !== 'postgresql:') {
+    throw new Error(`Invalid protocol [${parsed.protocol}]. Expected postgres: or postgresql:`);
   }
 
-  console.log('[Staging Migration] Connecting to cloud database...');
+  const hostname = parsed.hostname.toLowerCase();
+  const username = decodeURIComponent(parsed.username || '').toLowerCase();
+
+  // 1. Strictly reject all loopback and private LAN addresses
+  const forbiddenHosts = ['localhost', '127.0.0.1', '::1', '0.0.0.0'];
+  if (forbiddenHosts.includes(hostname) || hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.startsWith('172.16.')) {
+    throw new Error(`Safety Violation: STAGING_DATABASE_URL host [${hostname}] is a local or loopback address. Aborting.`);
+  }
+
+  // 2. Validate Supabase connection identity:
+  // Case A: Direct connection: db.<ref>.supabase.co
+  // Case B: Pooler connection: *.pooler.supabase.co with username postgres.<ref>
+  const isDirect = hostname === `db.${expectedRef}.supabase.co`;
+  const isPooler = hostname.endsWith('.pooler.supabase.co') && username.includes(expectedRef);
+
+  if (!isDirect && !isPooler) {
+    throw new Error(
+      `Safety Violation: STAGING_DATABASE_URL does not match project reference [${expectedRef}]. ` +
+      `Host must be "db.${expectedRef}.supabase.co" or username on pooler must contain "${expectedRef}".`
+    );
+  }
+
+  return { isDirect, isPooler, hostname };
+}
+
+export async function runStagingMigrations(dbUrl, projectRef = ALLOWED_PROJECT_REF) {
+  if (projectRef !== ALLOWED_PROJECT_REF) {
+    throw new Error(`Refusing execution: Target project ref [${projectRef}] is not allowed for this staging run.`);
+  }
+
+  const targetInfo = validateStagingDatabaseUrl(dbUrl, projectRef);
+  console.log(`[Staging Migration] Target validated safely: ${targetInfo.hostname} (Direct: ${targetInfo.isDirect}, Pooler: ${targetInfo.isPooler})`);
+
+  console.log('[Staging Migration] Connecting to remote PostgreSQL...');
   const sql = postgres(dbUrl, {
     ssl: 'require',
     max: 1,
-    connect_timeout: 10
+    connect_timeout: 15,
+    idle_timeout: 10
   });
 
   try {
-    // 1. Create migrations tracking table if not exists
+    // Confirm connection and database name
+    const [dbInfo] = await sql`SELECT current_database() as db, current_user as usr, version() as ver`;
+    console.log(`[Staging Migration] Connected as user "${dbInfo.usr}" to database "${dbInfo.db}".`);
+
+    // Ensure standard Supabase migration tracking schema and table exist
+    await sql`CREATE SCHEMA IF NOT EXISTS supabase_migrations`;
+    await sql`
+      CREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations (
+        version TEXT PRIMARY KEY,
+        statements TEXT[],
+        name TEXT
+      )
+    `;
+
+    // Also maintain a backup log in public._staging_applied_migrations
     await sql`
       CREATE TABLE IF NOT EXISTS public._staging_applied_migrations (
         name TEXT PRIMARY KEY,
         applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
-      );
+      )
     `;
 
-    const applied = await sql`SELECT name FROM public._staging_applied_migrations`;
-    const appliedSet = new Set(applied.map(r => r.name));
+    const appliedRows = await sql`SELECT version FROM supabase_migrations.schema_migrations`;
+    const appliedSet = new Set(appliedRows.map(r => r.version));
 
     const migrationsDir = path.resolve('supabase', 'migrations');
 
     for (const mig of MIGRATIONS) {
-      if (appliedSet.has(mig)) {
-        console.log(`[Staging Migration] Already applied: ${mig}`);
+      const version = mig.split('_')[0];
+
+      if (appliedSet.has(version)) {
+        console.log(`[Staging Migration] Already applied: ${mig} (version ${version})`);
         continue;
       }
 
       console.log(`[Staging Migration] Applying: ${mig}...`);
       const filePath = path.join(migrationsDir, mig);
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`Migration file not found: ${filePath}`);
+      }
+
       const sqlContent = fs.readFileSync(filePath, 'utf8');
 
-      // Execute in transaction
+      // Execute migration in a single transaction
       await sql.begin(async tx => {
         await tx.unsafe(sqlContent);
-        await tx`INSERT INTO public._staging_applied_migrations (name) VALUES (${mig})`;
+        await tx`
+          INSERT INTO supabase_migrations.schema_migrations (version, name)
+          VALUES (${version}, ${mig})
+          ON CONFLICT (version) DO NOTHING
+        `;
+        await tx`
+          INSERT INTO public._staging_applied_migrations (name)
+          VALUES (${mig})
+          ON CONFLICT (name) DO NOTHING
+        `;
       });
 
       console.log(`[Staging Migration] Successfully applied: ${mig}`);
     }
 
-    console.log('[Staging Migration] All staging migrations up to date.');
+    console.log('[Staging Migration] All 9 migrations successfully verified on cloud staging!');
   } finally {
     await sql.end();
   }
@@ -87,9 +157,10 @@ export async function runStagingMigrations(dbUrl, expectedRef) {
 
 if (process.argv[1]?.endsWith('migrate-staging.mjs')) {
   const dbUrl = process.env.STAGING_DATABASE_URL;
-  const expectedRef = process.env.STAGING_PROJECT_REF;
-  runStagingMigrations(dbUrl, expectedRef).catch(err => {
-    console.error('[Staging Migration Error]:', err.message);
+  const projectRef = process.env.STAGING_PROJECT_REF || ALLOWED_PROJECT_REF;
+
+  runStagingMigrations(dbUrl, projectRef).catch(err => {
+    console.error('[Staging Migration Fatal Error]:', err.message);
     process.exit(1);
   });
 }
