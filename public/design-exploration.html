@@ -1,0 +1,2294 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PPR NADI — Eksplorasi Reka Bentuk Antara Muka (Design Direction)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       PPR NADI DESIGN SYSTEM TOKENS (Strictly Accessible & Senior-Friendly)
+       No gradients. No glassmorphism. High contrast. Large touch targets.
+       ========================================================================== */
+    :root {
+      --bg-white: #FFFFFF;
+      --bg-surface-subtle: #F0F5FC; /* Very light blue for secondary surfaces */
+      --bg-surface-neutral: #F8F9FA;
+      
+      --color-primary-blue: #1554AD; /* Deep accessible blue - 7.28:1 contrast on white */
+      --color-primary-blue-hover: #0E3E85;
+      --color-primary-blue-active: #0A2E63;
+      --color-primary-blue-tint: #EBF3FC;
+      
+      --color-text-charcoal: #17212F; /* 15.8:1 contrast on white */
+      --color-text-muted: #374151; /* Dark grey for secondary text - 7.5:1 contrast */
+      --color-text-on-blue: #FFFFFF;
+      
+      --color-border: #CBD5E1; /* Clearly visible neutral border */
+      --color-border-focused: #1554AD;
+      
+      /* Semantic Alert Colours (Used sparingly with text & icons) */
+      --color-warning-bg: #FEF9C3; /* Pale yellow */
+      --color-warning-border: #CA8A04;
+      --color-warning-text: #713F12; /* 9.8:1 contrast on yellow */
+      
+      --color-danger-bg: #FEF2F2; /* Pale red */
+      --color-danger-border: #DC2626;
+      --color-danger-text: #991B1B; /* 8.5:1 contrast on pale red */
+      --color-danger-btn: #B91C1C;
+      
+      /* Typography Scale for Mobile (Older Adult Friendly) */
+      --font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-size-title: 24px;
+      --font-size-heading: 20px;
+      --font-size-body: 18px; /* Standard body text min 18px */
+      --font-size-supporting: 16px; /* Supporting text min 16px */
+      
+      /* Touch Targets */
+      --min-touch-target: 48px;
+      --border-radius: 8px; /* Clean, calm, non-exaggerated corners */
+      --border-radius-lg: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: #E2E8F0; /* Showcase presentation backdrop */
+      color: var(--color-text-charcoal);
+      line-height: 1.5;
+      font-size: var(--font-size-body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Presentation Header Toolbar */
+    .top-toolbar {
+      background-color: #0F172A;
+      color: #FFFFFF;
+      padding: 12px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 2px solid #334155;
+    }
+
+    .top-toolbar .brand-badge {
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .top-toolbar .controls-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-label {
+      font-size: 14px;
+      color: #CBD5E1;
+      font-weight: 600;
+    }
+
+    .nav-pill-group {
+      display: inline-flex;
+      background: #1E293B;
+      border: 1px solid #475569;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .nav-pill-btn {
+      background: transparent;
+      border: none;
+      color: #E2E8F0;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .nav-pill-btn:hover {
+      background: #334155;
+    }
+
+    .nav-pill-btn.active {
+      background: var(--color-primary-blue);
+      color: #FFFFFF;
+    }
+
+    /* Main Showcase Canvas */
+    .showcase-container {
+      padding: 32px 16px 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .screen-meta-banner {
+      max-width: 800px;
+      width: 100%;
+      background: #FFFFFF;
+      border-left: 6px solid var(--color-primary-blue);
+      border-top: 1px solid var(--color-border);
+      border-right: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+      padding: 16px 20px;
+      border-radius: 6px;
+    }
+
+    .screen-meta-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-primary-blue);
+      margin-bottom: 4px;
+    }
+
+    .screen-meta-desc {
+      font-size: 16px;
+      color: var(--color-text-muted);
+    }
+
+    /* Device Frames (Clean presentation container without fake skeuomorphic bezels) */
+    .mobile-frame-container {
+      width: 100%;
+      max-width: 412px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .mobile-viewport {
+      width: 390px;
+      min-height: 844px;
+      background-color: var(--bg-white);
+      border: 2px solid #94A3B8;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .desktop-viewport {
+      width: 100%;
+      max-width: 1400px;
+      min-height: 900px;
+      background-color: var(--bg-white);
+      border: 2px solid #94A3B8;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Screen Views Visibility */
+    .screen-view {
+      display: none;
+      width: 100%;
+    }
+    .screen-view.active {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    /* --------------------------------------------------------------------------
+       COMMON MOBILE UI ELEMENTS
+       -------------------------------------------------------------------------- */
+    .mobile-header {
+      background-color: var(--bg-white);
+      border-bottom: 2px solid var(--color-border);
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .mobile-header-brand {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--color-primary-blue);
+      letter-spacing: 0.5px;
+    }
+
+    .language-toggle-btn {
+      background: var(--bg-surface-subtle);
+      border: 2px solid var(--color-primary-blue);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-primary-blue);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 38px;
+    }
+
+    .language-toggle-btn:hover {
+      background: var(--color-primary-blue-tint);
+    }
+
+    .mobile-content {
+      flex: 1;
+      padding: 20px 18px 90px; /* Bottom pad for fixed bottom nav */
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 72px;
+      background-color: var(--bg-white);
+      border-top: 2px solid var(--color-border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 50;
+    }
+
+    .bottom-nav-item {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      text-decoration: none;
+      color: var(--color-text-muted);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .bottom-nav-item svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--color-text-muted);
+    }
+
+    .bottom-nav-item span {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .bottom-nav-item.active {
+      color: var(--color-primary-blue);
+    }
+
+    .bottom-nav-item.active svg {
+      stroke: var(--color-primary-blue);
+      stroke-width: 2.5;
+    }
+
+    .bottom-nav-item.active span {
+      font-weight: 800;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+
+    /* Common Buttons */
+    .btn-primary {
+      background-color: var(--color-primary-blue);
+      color: var(--color-text-on-blue);
+      border: 2px solid var(--color-primary-blue);
+      border-radius: var(--border-radius);
+      min-height: var(--min-touch-target);
+      padding: 14px 20px;
+      font-size: var(--font-size-body);
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      text-decoration: none;
+      font-family: inherit;
+      text-align: center;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--color-primary-blue-hover);
+      border-color: var(--color-primary-blue-hover);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-white);
+      color: var(--color-primary-blue);
+      border: 2px solid var(--color-primary-blue);
+      border-radius: var(--border-radius);
+      min-height: var(--min-touch-target);
+      padding: 12px 18px;
+      font-size: var(--font-size-body);
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      text-decoration: none;
+      font-family: inherit;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--bg-surface-subtle);
+    }
+
+    /* Resident Location Identity Card */
+    .resident-card {
+      background-color: var(--bg-surface-subtle);
+      border: 2px solid var(--color-border);
+      border-radius: var(--border-radius);
+      padding: 16px;
+    }
+
+    .resident-card-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      margin-bottom: 2px;
+    }
+
+    .resident-card-address {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--color-text-charcoal);
+    }
+
+    /* Notice Card (5 Essential Questions) */
+    .notice-card {
+      background-color: var(--bg-white);
+      border: 2px solid var(--color-border);
+      border-left: 6px solid var(--color-primary-blue);
+      border-radius: var(--border-radius);
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .notice-card.warning-notice {
+      border-left-color: #D97706;
+      background-color: #FFFDF5;
+    }
+
+    .notice-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .notice-badge {
+      background-color: var(--color-primary-blue-tint);
+      color: var(--color-primary-blue);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--color-primary-blue);
+      display: inline-block;
+    }
+
+    .notice-badge.warning {
+      background-color: var(--color-warning-bg);
+      color: var(--color-warning-text);
+      border-color: var(--color-warning-border);
+    }
+
+    .notice-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--color-text-charcoal);
+      line-height: 1.35;
+    }
+
+    .notice-body-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 16px;
+    }
+
+    .notice-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .notice-item-label {
+      font-weight: 700;
+      color: var(--color-text-muted);
+      font-size: 15px;
+    }
+
+    .notice-item-text {
+      color: var(--color-text-charcoal);
+      font-size: 16px;
+    }
+
+    .notice-timestamp {
+      margin-top: 4px;
+      font-size: 14px;
+      color: var(--color-text-muted);
+      border-top: 1px solid var(--color-border);
+      padding-top: 8px;
+    }
+
+    /* Existing Reports Shortcut Block */
+    .section-title {
+      font-size: var(--font-size-heading);
+      font-weight: 700;
+      color: var(--color-text-charcoal);
+      margin-top: 6px;
+      margin-bottom: 2px;
+    }
+
+    .reports-shortcut-card {
+      background-color: var(--bg-white);
+      border: 2px solid var(--color-border);
+      border-radius: var(--border-radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .report-mini-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .report-mini-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .report-mini-category {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--color-text-charcoal);
+    }
+
+    .report-mini-date {
+      font-size: 14px;
+      color: var(--color-text-muted);
+    }
+
+    .status-pill {
+      font-size: 15px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-pill.under-review {
+      background-color: var(--color-primary-blue-tint);
+      color: var(--color-primary-blue);
+      border: 1px solid var(--color-primary-blue);
+    }
+
+    .status-pill.in-progress {
+      background-color: var(--color-warning-bg);
+      color: var(--color-warning-text);
+      border: 1px solid var(--color-warning-border);
+    }
+
+    .status-pill.resolved {
+      background-color: #ECFDF5;
+      color: #065F46;
+      border: 1px solid #10B981;
+    }
+
+    /* --------------------------------------------------------------------------
+       SCREEN 2: REPORT FORM STYLES
+       -------------------------------------------------------------------------- */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-label {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-text-charcoal);
+    }
+
+    .form-hint {
+      font-size: 16px;
+      color: var(--color-text-muted);
+      line-height: 1.4;
+    }
+
+    /* Category Buttons Grid */
+    .category-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .category-btn {
+      background-color: var(--bg-white);
+      border: 2px solid var(--color-border);
+      border-radius: var(--border-radius);
+      min-height: 56px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+
+    .category-btn:hover {
+      border-color: var(--color-primary-blue);
+      background-color: var(--bg-surface-subtle);
+    }
+
+    .category-btn.selected {
+      border-color: var(--color-primary-blue);
+      background-color: var(--color-primary-blue-tint);
+      border-width: 3px;
+    }
+
+    .category-icon {
+      width: 28px;
+      height: 28px;
+      stroke: var(--color-primary-blue);
+      flex-shrink: 0;
+    }
+
+    .category-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-text-charcoal);
+    }
+
+    .category-btn.selected .category-title {
+      color: var(--color-primary-blue);
+      font-weight: 800;
+    }
+
+    .form-textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 14px;
+      font-size: 18px;
+      font-family: inherit;
+      color: var(--color-text-charcoal);
+      background-color: var(--bg-white);
+      border: 2px solid var(--color-border);
+      border-radius: var(--border-radius);
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--color-primary-blue);
+      box-shadow: 0 0 0 3px var(--color-primary-blue-tint);
+    }
+
+    /* Photo Upload Area */
+    .photo-actions-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .photo-action-btn {
+      min-height: 52px;
+      border-radius: var(--border-radius);
+      padding: 10px 12px;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      text-align: center;
+    }
+
+    .photo-action-btn.camera {
+      background-color: var(--color-primary-blue-tint);
+      border: 2px solid var(--color-primary-blue);
+      color: var(--color-primary-blue);
+    }
+
+    .photo-action-btn.camera:hover {
+      background-color: #D6E8FA;
+    }
+
+    .photo-action-btn.gallery {
+      background-color: var(--bg-white);
+      border: 2px solid var(--color-border);
+      color: var(--color-text-charcoal);
+    }
+
+    .photo-action-btn.gallery:hover {
+      border-color: var(--color-primary-blue);
+      background-color: var(--bg-surface-neutral);
+    }
+
+    .photo-counter-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-text-muted);
+    }
+
+    .photo-previews-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .photo-preview-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 2px solid var(--color-border);
+      border-radius: var(--border-radius);
+      padding: 10px 14px;
+      background: var(--bg-surface-neutral);
+    }
+
+    .photo-thumb-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .photo-thumb-icon {
+      width: 40px;
+      height: 40px;
+      background: #E2E8F0;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .photo-name-bytes {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .photo-filename {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-text-charcoal);
+    }
+
+    .photo-size {
+      font-size: 14px;
+      color: var(--color-text-muted);
+    }
+
+    .btn-remove-photo {
+      background: var(--bg-white);
+      border: 2px solid var(--color-danger-border);
+      color: var(--color-danger-btn);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 44px;
+    }
+
+    /* Error recovery card */
+    .alert-card-danger {
+      background-color: var(--color-danger-bg);
+      border: 2px solid var(--color-danger-border);
+      border-radius: var(--border-radius);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .alert-card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--color-danger-text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .alert-card-msg {
+      font-size: 15px;
+      color: var(--color-text-charcoal);
+    }
+
+    /* Planned Feature Card (Voice Variant) */
+    .planned-feature-box {
+      border: 2px dashed #64748B;
+      background: #F8FAFC;
+      border-radius: var(--border-radius);
+      padding: 16px;
+      margin-top: 10px;
+    }
+
+    .planned-tag {
+      display: inline-block;
+      background: #334155;
+      color: #FFFFFF;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .planned-voice-header {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--color-text-charcoal);
+      margin-bottom: 4px;
+    }
+
+    .planned-voice-desc {
+      font-size: 15px;
+      color: var(--color-text-muted);
+      margin-bottom: 12px;
+    }
+
+    .planned-voice-btn {
+      background: #FFFFFF;
+      border: 2px solid #64748B;
+      border-radius: var(--border-radius);
+      min-height: 48px;
+      width: 100%;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1E293B;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    /* Confirmation Modal / Screen */
+    .confirmation-view {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+      padding: 24px 12px;
+    }
+
+    .confirmation-icon-circle {
+      width: 64px;
+      height: 64px;
+      background: #ECFDF5;
+      border: 3px solid #10B981;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #065F46;
+      font-size: 32px;
+    }
+
+    .confirmation-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--color-text-charcoal);
+    }
+
+    .confirmation-ref-box {
+      background: var(--bg-surface-subtle);
+      border: 2px solid var(--color-border);
+      border-radius: var(--border-radius);
+      padding: 12px 20px;
+      width: 100%;
+    }
+
+    .confirmation-ref-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+    }
+
+    .confirmation-ref-number {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--color-primary-blue);
+      letter-spacing: 1px;
+    }
+
+    .confirmation-timeline {
+      text-align: left;
+      width: 100%;
+      background: var(--bg-white);
+      border: 2px solid var(--color-border);
+      border-radius: var(--border-radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .timeline-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--color-text-charcoal);
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 8px;
+    }
+
+    .timeline-step {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .timeline-step-num {
+      width: 28px;
+      height: 28px;
+      background: var(--color-primary-blue);
+      color: #FFFFFF;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .timeline-step-desc {
+      font-size: 15px;
+      color: var(--color-text-charcoal);
+    }
+
+    /* --------------------------------------------------------------------------
+       SCREEN 3: DESKTOP MANAGEMENT QUEUE (1440px)
+       -------------------------------------------------------------------------- */
+    .desktop-header {
+      background-color: var(--bg-white);
+      border-bottom: 2px solid var(--color-border);
+      padding: 18px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .desktop-brand-group {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .desktop-brand-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--color-primary-blue);
+    }
+
+    .desktop-estate-select {
+      font-size: 16px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border: 2px solid var(--color-border);
+      border-radius: 6px;
+      background: var(--bg-surface-subtle);
+      color: var(--color-text-charcoal);
+    }
+
+    .desktop-user-profile {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text-charcoal);
+    }
+
+    .desktop-body {
+      display: grid;
+      grid-template-columns: 260px 1fr 380px;
+      flex: 1;
+      min-height: 800px;
+      background-color: #F8FAFC;
+    }
+
+    /* Sidebar Navigation */
+    .desktop-sidebar {
+      background-color: var(--bg-white);
+      border-right: 2px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-heading {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--color-text-muted);
+      padding: 0 12px 8px;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-radius: 6px;
+      color: var(--color-text-charcoal);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+      border: 2px solid transparent;
+    }
+
+    .sidebar-link:hover {
+      background: var(--bg-surface-subtle);
+    }
+
+    .sidebar-link.active {
+      background: var(--color-primary-blue-tint);
+      border-color: var(--color-primary-blue);
+      color: var(--color-primary-blue);
+      font-weight: 800;
+    }
+
+    .sidebar-badge {
+      background: var(--color-primary-blue);
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    /* Main Table Area */
+    .desktop-main-content {
+      padding: 28px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-x: auto;
+    }
+
+    .content-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .content-page-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--color-text-charcoal);
+    }
+
+    /* Structured Management Table */
+    .queue-table-card {
+      background: var(--bg-white);
+      border: 2px solid var(--color-border);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+    }
+
+    .queue-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .queue-table th {
+      background-color: var(--bg-surface-neutral);
+      border-bottom: 2px solid var(--color-border);
+      padding: 14px 18px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-text-muted);
+    }
+
+    .queue-table td {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 16px;
+      vertical-align: middle;
+    }
+
+    .queue-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .queue-table tr.selected {
+      background-color: var(--color-primary-blue-tint);
+    }
+
+    .queue-table tr:hover:not(.selected) {
+      background-color: #F1F5F9;
+    }
+
+    .problem-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .problem-title {
+      font-weight: 700;
+      color: var(--color-text-charcoal);
+    }
+
+    .problem-ref {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      font-family: monospace;
+    }
+
+    .btn-action-small {
+      background: var(--color-primary-blue);
+      color: #FFFFFF;
+      border: 1px solid var(--color-primary-blue);
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-action-small:hover {
+      background: var(--color-primary-blue-hover);
+    }
+
+    /* Triage / AI Recommendation Panel (Planned Feature) */
+    .desktop-triage-panel {
+      background-color: var(--bg-white);
+      border-left: 2px solid var(--color-border);
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .triage-panel-header {
+      border-bottom: 2px solid var(--color-border);
+      padding-bottom: 14px;
+    }
+
+    .triage-panel-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--color-text-charcoal);
+    }
+
+    .triage-meta-text {
+      font-size: 14px;
+      color: var(--color-text-muted);
+    }
+
+    /* AI Recommendation Box */
+    .ai-recom-box {
+      border: 2px solid #3B82F6;
+      background: #EFF6FF;
+      border-radius: var(--border-radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ai-recom-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .ai-tag {
+      background: #1E40AF;
+      color: #FFFFFF;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .ai-priority-badge {
+      font-size: 15px;
+      font-weight: 800;
+      color: #991B1B;
+      background: #FEE2E2;
+      border: 1px solid #DC2626;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .ai-reasons-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 14px;
+      color: #1E293B;
+      padding-left: 18px;
+    }
+
+    .ai-disclaimer {
+      font-size: 13px;
+      color: #475569;
+      font-style: italic;
+      border-top: 1px solid #BFDBFE;
+      padding-top: 8px;
+    }
+
+    /* Verification Details Tabs */
+    .triage-facts-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 15px;
+    }
+
+    .fact-row {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 8px;
+    }
+
+    .fact-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-text-muted);
+    }
+
+    .fact-value {
+      color: var(--color-text-charcoal);
+      font-weight: 600;
+    }
+
+    /* Footer Notes */
+    .showcase-footer {
+      max-width: 800px;
+      width: 100%;
+      background: var(--bg-white);
+      border: 2px solid var(--color-border);
+      border-radius: 8px;
+      padding: 20px;
+      font-size: 15px;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+    }
+
+    .showcase-footer h4 {
+      color: var(--color-text-charcoal);
+      font-size: 17px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Showcase Toolbar -->
+  <header class="top-toolbar">
+    <div class="brand-badge">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <span>PPR NADI — Eksplorasi Reka Bentuk UI (Design Exploration)</span>
+    </div>
+
+    <div class="controls-group">
+      <span class="toolbar-label" id="lbl-select-screen">Pilih Skrin:</span>
+      <div class="nav-pill-group">
+        <button class="nav-pill-btn active" id="btn-screen-1" onclick="switchScreen(1)">1. Laman Penduduk (Mobile)</button>
+        <button class="nav-pill-btn" id="btn-screen-2" onclick="switchScreen(2)">2. Borang Lapor (Mobile)</button>
+        <button class="nav-pill-btn" id="btn-screen-3" onclick="switchScreen(3)">3. Barisan Pengurusan (Desktop)</button>
+      </div>
+
+      <span class="toolbar-label" id="lbl-language">Bahasa:</span>
+      <div class="nav-pill-group">
+        <button class="nav-pill-btn active" id="btn-lang-ms" onclick="setLanguage('ms')">Bahasa Melayu</button>
+        <button class="nav-pill-btn" id="btn-lang-en" onclick="setLanguage('en')">English</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Canvas -->
+  <main class="showcase-container">
+
+    <!-- Screen Annotation / Context -->
+    <div class="screen-meta-banner">
+      <div class="screen-meta-title" id="meta-title">Skrin 1: Laman Utama Penduduk (Mobile 390px)</div>
+      <div class="screen-meta-desc" id="meta-desc">Direka khas untuk warga emas dan komuniti PPR. Teks saiz besar (18px), butang minimum 48px, warna biru dominan berkontras tinggi (7.28:1). Notis rasmi menjawab 5 soalan penting.</div>
+    </div>
+
+    <!-- ========================================================================
+         SCREEN 1: RESIDENT HOME (Mobile, 390px)
+         ======================================================================== -->
+    <section class="screen-view active mobile-frame-container" id="screen-1-wrapper">
+      <div class="mobile-viewport">
+        <!-- Mobile Header -->
+        <header class="mobile-header">
+          <div class="mobile-header-brand">PPR NADI</div>
+          <button class="language-toggle-btn" onclick="toggleLanguage()" aria-label="Tukar bahasa">
+            <span id="s1-lang-btn-text">BM / EN</span>
+          </button>
+        </header>
+
+        <!-- Mobile Scrollable Body -->
+        <div class="mobile-content">
+
+          <!-- Resident Context Box -->
+          <div class="resident-card">
+            <div class="resident-card-label" id="s1-resident-card-label">Kediaman Anda:</div>
+            <div class="resident-card-address" id="s1-resident-card-address">PPR Sentosa, Blok B, Unit 12-08</div>
+          </div>
+
+          <!-- PRIMARY ACTION: Lapor Masalah (Prominent Button) -->
+          <div>
+            <button class="btn-primary" onclick="switchScreen(2)" style="font-size: 20px; min-height: 58px;" id="s1-btn-lapor-utama">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"></path></svg>
+              <span id="s1-btn-lapor-text">Lapor Masalah Baru</span>
+            </button>
+          </div>
+
+          <!-- SECTION: Notis Kawasan (Official Notices) -->
+          <div>
+            <h2 class="section-title" id="s1-notices-title">Notis Rasmi Kawasan</h2>
+            
+            <!-- Notice Card (Answering 5 Essential Questions) -->
+            <div class="notice-card warning-notice">
+              <div class="notice-header">
+                <span class="notice-badge warning" id="s1-notice-badge">PENTING</span>
+                <div class="notice-title" id="s1-notice-title">Pembaikan Paip Utama Blok B Sedang Dijalankan</div>
+              </div>
+
+              <div class="notice-body-grid">
+                <div class="notice-item">
+                  <span class="notice-item-label" id="s1-q1-label">Apa yang berlaku?</span>
+                  <span class="notice-item-text" id="s1-q1-text">Paip utama pecah di bilik pam aras bawah.</span>
+                </div>
+                <div class="notice-item">
+                  <span class="notice-item-label" id="s1-q2-label">Kawasan terjejas:</span>
+                  <span class="notice-item-text" id="s1-q2-text">Tingkat 8 hingga Tingkat 16 (Blok B).</span>
+                </div>
+                <div class="notice-item">
+                  <span class="notice-item-label" id="s1-q3-label">Tindakan pihak pengurusan:</span>
+                  <span class="notice-item-text" id="s1-q3-text">Kontraktor paip sedang menggantikan injap rosak. Jangka siap jam 5:00 petang.</span>
+                </div>
+                <div class="notice-item">
+                  <span class="notice-item-label" id="s1-q4-label">Apa yang perlu anda buat?</span>
+                  <span class="notice-item-text" id="s1-q4-text">Tangki simpanan kecemasan dibuka di hadapan surau Blok B untuk kegunaan memasak.</span>
+                </div>
+              </div>
+
+              <div class="notice-timestamp" id="s1-notice-time">
+                Dikemas kini: Hari ini, 2:15 petang oleh Pengurusan PPR Sentosa
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION: Laporan Saya (My Reports Shortcut) -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h2 class="section-title" id="s1-my-reports-title">Laporan Saya</h2>
+              <span style="font-size: 15px; font-weight: 700; color: var(--color-primary-blue);" id="s1-my-reports-total">1 Laporan Aktif</span>
+            </div>
+
+            <div class="reports-shortcut-card">
+              <div class="report-mini-item">
+                <div>
+                  <div class="report-mini-category" id="s1-rep-category">Bekalan Air Terputus</div>
+                  <div class="report-mini-date" id="s1-rep-date">17 Okt 2026, 11:30 pagi • Blok B, Tkt 12</div>
+                </div>
+                <span class="status-pill under-review" id="s1-rep-status">Sedang Disemak</span>
+              </div>
+              <button class="btn-secondary" onclick="alert(currentLang === 'ms' ? 'Paparan terperinci laporan anda.' : 'Detailed report timeline view.')" id="s1-btn-view-all">
+                <span id="s1-btn-view-all-text">Lihat Perkembangan Laporan</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Mobile Bottom Navigation (Icon + Readable Text) -->
+        <nav class="bottom-nav">
+          <button class="bottom-nav-item active" onclick="switchScreen(1)">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+            <span id="nav-home">Utama</span>
+          </button>
+          <button class="bottom-nav-item" onclick="switchScreen(2)">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14"></path></svg>
+            <span id="nav-report">Lapor</span>
+          </button>
+          <button class="bottom-nav-item" onclick="alert(currentLang === 'ms' ? 'Menavigasi ke senarai penuh Laporan Saya.' : 'Navigating to full My Reports list.')">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            <span id="nav-my-reports">Laporan Saya</span>
+          </button>
+        </nav>
+      </div>
+    </section>
+
+
+    <!-- ========================================================================
+         SCREEN 2: RESIDENT REPORT FORM (Mobile, 390px)
+         ======================================================================== -->
+    <section class="screen-view mobile-frame-container" id="screen-2-wrapper">
+      <div class="mobile-viewport">
+        <!-- Mobile Header with Back Button -->
+        <header class="mobile-header">
+          <button onclick="switchScreen(1)" style="background:none; border:none; color:var(--color-primary-blue); font-size:16px; font-weight:700; display:flex; align-items:center; gap:4px; cursor:pointer; font-family:inherit;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            <span id="s2-btn-back">Kembali</span>
+          </button>
+          <div style="font-size:18px; font-weight:800; color:var(--color-primary-blue);" id="s2-header-title">Borang Laporan</div>
+          <button class="language-toggle-btn" onclick="toggleLanguage()">
+            <span id="s2-lang-btn-text">BM / EN</span>
+          </button>
+        </header>
+
+        <!-- Form Body -->
+        <div class="mobile-content" id="report-form-container">
+
+          <!-- Auto-filled context info (No re-entering known info) -->
+          <div class="resident-card" style="padding: 12px 14px;">
+            <div class="resident-card-label" id="s2-location-label">Lokasi Anda (Automatik):</div>
+            <div style="font-size: 17px; font-weight: 700; color: var(--color-text-charcoal);" id="s2-location-value">PPR Sentosa — Blok B, Unit 12-08</div>
+          </div>
+
+          <!-- Step 1: Kategori Masalah -->
+          <div class="form-group">
+            <label class="form-label" id="s2-lbl-category">1. Pilih Kategori Masalah</label>
+            <div class="category-grid">
+              <button type="button" class="category-btn selected" id="cat-water" onclick="selectCategory('water')">
+                <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                <span class="category-title" id="s2-cat-water">Bekalan Air</span>
+              </button>
+              <button type="button" class="category-btn" id="cat-lift" onclick="selectCategory('lift')">
+                <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="2" width="14" height="20" rx="2"></rect><polyline points="10 9 12 7 14 9"></polyline><polyline points="10 15 12 17 14 15"></polyline></svg>
+                <span class="category-title" id="s2-cat-lift">Lif</span>
+              </button>
+              <button type="button" class="category-btn" id="cat-light" onclick="selectCategory('light')">
+                <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a7 7 0 0 0-7 7c0 2.5 1.5 4.5 3 6h8c1.5-1.5 3-3.5 3-6a7 7 0 0 0-7-7z"></path></svg>
+                <span class="category-title" id="s2-cat-light">Lampu Koridor</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 2: Huraian Masalah -->
+          <div class="form-group">
+            <label class="form-label" for="report-desc" id="s2-lbl-desc">2. Ceritakan Masalah Yang Berlaku</label>
+            <div class="form-hint" id="s2-hint-desc">Contoh: Air paip keluar perlahan dan keruh sejak pagi tadi di bilik air tingkat 12.</div>
+            <textarea class="form-textarea" id="report-desc">Paip sinki dapur tidak mengeluarkan air langsung sejak jam 8 pagi. Tekanan air sifar.</textarea>
+          </div>
+
+          <!-- Step 3: Gambar Bukti (Optional, Max 3) -->
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <label class="form-label" id="s2-lbl-photos">3. Gambar Bukti (Pilihan)</label>
+              <span class="photo-counter-text" id="s2-photo-counter">1 daripada 3 gambar</span>
+            </div>
+            <div class="form-hint" id="s2-hint-photos">Ambil gambar paip, lif atau lokasi rosak jika selamat untuk berbuat demikian.</div>
+
+            <!-- Two clearly labelled actions: Camera vs Gallery -->
+            <div class="photo-actions-row">
+              <button type="button" class="photo-action-btn camera" onclick="simulateAddPhoto('Kamera')" id="s2-btn-camera">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                <span id="s2-btn-camera-text">Ambil Gambar</span>
+              </button>
+              <button type="button" class="photo-action-btn gallery" onclick="simulateAddPhoto('Galeri')" id="s2-btn-gallery">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <span id="s2-btn-gallery-text">Pilih Dari Galeri</span>
+              </button>
+            </div>
+
+            <!-- Photo List Preview -->
+            <div class="photo-previews-list" id="photo-list">
+              <div class="photo-preview-item" id="sample-photo-1">
+                <div class="photo-thumb-info">
+                  <div class="photo-thumb-icon">🚰</div>
+                  <div class="photo-name-bytes">
+                    <span class="photo-filename">paip_sinki_rosak.jpg</span>
+                    <span class="photo-size">1.4 MB • Berjaya dimuat naik</span>
+                  </div>
+                </div>
+                <button type="button" class="btn-remove-photo" onclick="removePhoto('sample-photo-1')" id="s2-btn-remove-photo">Padam</button>
+              </div>
+            </div>
+
+            <!-- Error State Demonstration (Recovery against same report) -->
+            <div class="alert-card-danger" id="photo-error-banner" style="display:none;">
+              <div class="alert-card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <span id="s2-err-title">Ralat Muat Naik Gambar</span>
+              </div>
+              <div class="alert-card-msg" id="s2-err-msg">Laporan sudah disimpan. Gambar ini belum berjaya dilampirkan. Sila tekan butang di bawah untuk cuba semula tanpa mengisi borang baru.</div>
+              <button class="btn-secondary" style="margin-top:6px; min-height:44px;" onclick="retryPhotoUpload()" id="s2-btn-retry">Cuba Muat Naik Semula</button>
+            </div>
+          </div>
+
+          <!-- PLANNED FEATURE: Voice-Assisted Reporting Variant -->
+          <div class="planned-feature-box">
+            <span class="planned-tag" id="s2-planned-tag">CADANGAN CIRI AKAN DATANG</span>
+            <div class="planned-voice-header" id="s2-voice-title">Laporan Melalui Suara (Pilihan Tambahan)</div>
+            <div class="planned-voice-desc" id="s2-voice-desc">Untuk penduduk yang sukar menaip: bercakap dalam Bahasa Melayu, sistem sediakan draf untuk disemak dan disahkan sebelum dihantar.</div>
+            <button type="button" class="planned-voice-btn" onclick="openVoiceModal()" id="s2-btn-open-voice">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+              <span id="s2-btn-voice-text">Ceritakan Melalui Suara</span>
+            </button>
+          </div>
+
+          <!-- Submit Button -->
+          <div style="margin-top: 10px;">
+            <button type="button" class="btn-primary" onclick="submitReportForm()" style="font-size: 20px; min-height: 56px;" id="s2-btn-submit">
+              <span id="s2-btn-submit-text">Hantar Laporan</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Submission Confirmation Screen (State inside View 2) -->
+        <div class="mobile-content confirmation-view" id="confirmation-container">
+          <div class="confirmation-icon-circle">✓</div>
+          <div class="confirmation-title" id="s2-confirm-title">Laporan Anda Sudah Diterima</div>
+
+          <div class="confirmation-ref-box">
+            <div class="confirmation-ref-label" id="s2-confirm-ref-label">Nombor Rujukan Laporan:</div>
+            <div class="confirmation-ref-number">#LPR-2026-0842</div>
+          </div>
+
+          <div class="confirmation-timeline">
+            <div class="timeline-title" id="s2-confirm-timeline-title">Apa Yang Berlaku Seterusnya?</div>
+            <div class="timeline-step">
+              <div class="timeline-step-num">1</div>
+              <div class="timeline-step-desc" id="s2-step-1">Pegawai pengurusan PPR Sentosa akan menyemak laporan anda dalam tempoh 24 jam.</div>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-step-num">2</div>
+              <div class="timeline-step-desc" id="s2-step-2">Juruteknik atau kontraktor ditugaskan sekiranya pengesahan di tapak diperlukan.</div>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-step-num">3</div>
+              <div class="timeline-step-desc" id="s2-step-3">Anda akan menerima kemas kini status secara automatik pada halaman "Laporan Saya".</div>
+            </div>
+          </div>
+
+          <button class="btn-primary" onclick="switchScreen(1)" id="s2-btn-done">
+            <span id="s2-btn-done-text">Lihat Laporan Saya</span>
+          </button>
+          <button class="btn-secondary" onclick="resetForm()" id="s2-btn-new-rep">
+            <span id="s2-btn-new-rep-text">Buat Laporan Lain</span>
+          </button>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+          <button class="bottom-nav-item" onclick="switchScreen(1)">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+            <span id="nav-home-2">Utama</span>
+          </button>
+          <button class="bottom-nav-item active" onclick="switchScreen(2)">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14"></path></svg>
+            <span id="nav-report-2">Lapor</span>
+          </button>
+          <button class="bottom-nav-item" onclick="alert(currentLang === 'ms' ? 'Menavigasi ke senarai penuh Laporan Saya.' : 'Navigating to full My Reports list.')">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            <span id="nav-my-reports-2">Laporan Saya</span>
+          </button>
+        </nav>
+      </div>
+    </section>
+
+
+    <!-- ========================================================================
+         SCREEN 3: DESKTOP MANAGEMENT REPORT QUEUE (1440px)
+         ======================================================================== -->
+    <section class="screen-view" id="screen-3-wrapper">
+      <div class="desktop-viewport">
+        <!-- Desktop Header -->
+        <header class="desktop-header">
+          <div class="desktop-brand-group">
+            <div class="desktop-brand-title">PPR NADI — Pengurusan Fasiliti</div>
+            <select class="desktop-estate-select" aria-label="Pilih Kawasan Perumahan">
+              <option selected>PPR Sentosa (Kuala Lumpur)</option>
+              <option>PPR Kerinchi</option>
+              <option>PPR Seri Semarak</option>
+            </select>
+          </div>
+          <div class="desktop-user-profile">
+            <button class="language-toggle-btn" onclick="toggleLanguage()">
+              <span id="s3-lang-btn-text">BM / EN</span>
+            </button>
+            <span id="s3-user-name">Pengurus: En. Mohd Razak (Blok A & B)</span>
+          </div>
+        </header>
+
+        <!-- Desktop 3-Column Body (Sidebar + Queue Table + Triage/AI Panel) -->
+        <div class="desktop-body">
+
+          <!-- Left Sidebar -->
+          <nav class="desktop-sidebar">
+            <div class="sidebar-heading" id="s3-sidebar-menu">Menu Operasi</div>
+            <a href="javascript:void(0)" class="sidebar-link active">
+              <span id="s3-menu-incoming">Laporan Masuk</span>
+              <span class="sidebar-badge">4 Baru</span>
+            </a>
+            <a href="javascript:void(0)" class="sidebar-link">
+              <span id="s3-menu-incidents">Insiden Berpusat</span>
+              <span style="font-size:13px; color:#475569; font-weight:700;">1 Aktif</span>
+            </a>
+            <a href="javascript:void(0)" class="sidebar-link">
+              <span id="s3-menu-notices">Notis Rasmi Awam</span>
+            </a>
+            <a href="javascript:void(0)" class="sidebar-link">
+              <span id="s3-menu-archive">Arkib Selesai</span>
+            </a>
+          </nav>
+
+          <!-- Middle: Structured Queue Table (No decorative KPI clutter) -->
+          <main class="desktop-main-content">
+            <div class="content-header-row">
+              <div>
+                <h1 class="content-page-title" id="s3-page-title">Barisan Semakan Laporan Masuk</h1>
+                <p style="color:var(--color-text-muted); font-size:15px; margin-top:2px;" id="s3-page-desc">Semak fakta aduan penduduk, tentukan pengesahan tapak, dan pautkan laporan serupa kepada insiden berpusat.</p>
+              </div>
+              <button class="btn-action-small" onclick="alert(currentLang === 'ms' ? 'Menyegarkan barisan laporan...' : 'Refreshing queue...')" id="s3-btn-refresh">Segarkan Barisan</button>
+            </div>
+
+            <!-- Table -->
+            <div class="queue-table-card">
+              <table class="queue-table">
+                <thead>
+                  <tr>
+                    <th id="th-problem">Masalah & Rujukan</th>
+                    <th id="th-location">Lokasi</th>
+                    <th id="th-reports">Laporan Berkaitan</th>
+                    <th id="th-status">Status Semasa</th>
+                    <th id="th-action">Tindakan Seterusnya</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Row 1: Selected Water Issue with High Priority Suggestion -->
+                  <tr class="selected">
+                    <td>
+                      <div class="problem-cell">
+                        <span class="problem-title" id="r1-title">Bekalan air paip terputus sepenuhnya</span>
+                        <span class="problem-ref">#LPR-2026-0842 • 17 Okt, 11:30 pg</span>
+                      </div>
+                    </td>
+                    <td><strong id="r1-loc">Blok B (Tingkat 12)</strong><br><span style="font-size:13px; color:#475569;">Unit 12-08 (En. Shamsul)</span></td>
+                    <td>
+                      <span class="notice-badge warning" style="font-size:13px;" id="r1-related">4 Aduan Serupa</span>
+                      <div style="font-size:12px; color:#475569; margin-top:2px;">Tingkat 8, 10, 12, 14</div>
+                    </td>
+                    <td><span class="status-pill under-review" id="r1-status">Sedang Disemak</span></td>
+                    <td>
+                      <button class="btn-action-small" onclick="alert(currentLang === 'ms' ? 'Membuka dialog pengesahan insiden.' : 'Opening incident confirmation dialog.')" id="r1-btn-act">Sahkan Insiden</button>
+                    </td>
+                  </tr>
+
+                  <!-- Row 2: Lift Maintenance -->
+                  <tr>
+                    <td>
+                      <div class="problem-cell">
+                        <span class="problem-title" id="r2-title">Lif No. 2 tersangkut di tingkat 5</span>
+                        <span class="problem-ref">#LPR-2026-0839 • 17 Okt, 09:15 pg</span>
+                      </div>
+                    </td>
+                    <td><strong id="r2-loc">Blok A</strong><br><span style="font-size:13px; color:#475569;">Lif Penumpang 2</span></td>
+                    <td><span class="status-pill" style="background:#F1F5F9; color:#475569; border:1px solid #CBD5E1; font-size:13px;" id="r2-related">2 Aduan</span></td>
+                    <td><span class="status-pill in-progress" id="r2-status">Dalam Tindakan</span></td>
+                    <td>
+                      <button class="btn-action-small" style="background:#475569; border-color:#475569;" id="r2-btn-act">Kemas Kini Kontraktor</button>
+                    </td>
+                  </tr>
+
+                  <!-- Row 3: Corridor Lighting -->
+                  <tr>
+                    <td>
+                      <div class="problem-cell">
+                        <span class="problem-title" id="r3-title">Lampu koridor berkelip dan padam</span>
+                        <span class="problem-ref">#LPR-2026-0835 • 16 Okt, 08:40 mlm</span>
+                      </div>
+                    </td>
+                    <td><strong id="r3-loc">Blok B (Tingkat 4)</strong><br><span style="font-size:13px; color:#475569;">Hadapan Unit 4-02</span></td>
+                    <td><span style="font-size:14px; color:#475569;" id="r3-related">1 Aduan</span></td>
+                    <td><span class="status-pill under-review" id="r3-status">Diterima</span></td>
+                    <td>
+                      <button class="btn-action-small" style="background:#475569; border-color:#475569;" id="r3-btn-act">Tugaskan Juruteknik</button>
+                    </td>
+                  </tr>
+
+                  <!-- Row 4: Water Supply Resolved -->
+                  <tr>
+                    <td>
+                      <div class="problem-cell">
+                        <span class="problem-title" id="r4-title">Injap limpahan tangki aras bumbung</span>
+                        <span class="problem-ref">#LPR-2026-0820 • 16 Okt, 02:10 ptg</span>
+                      </div>
+                    </td>
+                    <td><strong id="r4-loc">Blok C</strong><br><span style="font-size:13px; color:#475569;">Bilik Tangki Aras Bumbung</span></td>
+                    <td><span style="font-size:14px; color:#475569;" id="r4-related">1 Aduan</span></td>
+                    <td><span class="status-pill resolved" id="r4-status">Selesai</span></td>
+                    <td>
+                      <span style="font-size:13px; color:#059669; font-weight:700;" id="r4-btn-act">Telah Ditutup</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </main>
+
+          <!-- Right Column: Detail & Planned AI Priority Suggestion -->
+          <aside class="desktop-triage-panel">
+            <div class="triage-panel-header">
+              <div class="triage-panel-title" id="triage-title">Perincian Laporan #LPR-2026-0842</div>
+              <div class="triage-meta-text" id="triage-sub">Pengadu: En. Shamsul (Blok B, Unit 12-08)</div>
+            </div>
+
+            <!-- PLANNED FEATURE: AI Priority Recommendation with Clear Reasons -->
+            <div class="ai-recom-box">
+              <div class="ai-recom-header">
+                <span class="ai-tag" id="ai-tag-lbl">CADANGAN CIRI AKAN DATANG</span>
+                <span class="ai-priority-badge" id="ai-priority-val">Cadangan Keutamaan: TINGGI</span>
+              </div>
+              <div style="font-size:15px; font-weight:700; color:#1E3A8A;" id="ai-reasons-title">Sebab Cadangan AI:</div>
+              <ul class="ai-reasons-list" id="ai-reasons-ul">
+                <li id="ai-r1">Gangguan bekalan air dikesan merentasi pelbagai tingkat (Tkt 8, 10, 12, 14 Blok B).</li>
+                <li id="ai-r2">Terdapat 4 laporan aduan serupa dalam tempoh masa kurang dari 2 jam.</li>
+                <li id="ai-r3">Melibatkan keperluan utiliti asas penduduk warga emas dan keluarga.</li>
+              </ul>
+              <div class="ai-disclaimer" id="ai-disclaimer-txt">
+                *Nota: Keputusan keutamaan muktamad ditentukan oleh Pengurus Fasiliti. AI hanya memberikan cadangan berpandukan fakta teks laporan tanpa anggaran peratusan rekaan.
+              </div>
+            </div>
+
+            <!-- Verification Breakdown -->
+            <div class="triage-facts-box">
+              <div class="fact-row">
+                <span class="fact-label" id="f-resident-lbl">Maklumat Dari Penduduk:</span>
+                <span class="fact-value" id="f-resident-val">"Paip sinki dapur tidak mengeluarkan air langsung sejak jam 8 pagi. Tekanan air sifar."</span>
+              </div>
+              <div class="fact-row">
+                <span class="fact-label" id="f-evidence-lbl">Bukti Lampiran:</span>
+                <span class="fact-value" id="f-evidence-val">1 Foto (paip_sinki_rosak.jpg — Sah)</span>
+              </div>
+              <div class="fact-row">
+                <span class="fact-label" id="f-verified-lbl">Fakta Disahkan Pengurusan:</span>
+                <span class="fact-value" style="color:#B45309;" id="f-verified-val">Injap pam utama pecah di bilik pam aras bawah. Kontraktor sedang bekerja.</span>
+              </div>
+              <div class="fact-row">
+                <span class="fact-label" id="f-action-lbl">Tindakan Workflow Seterusnya:</span>
+                <span class="fact-value" style="color:var(--color-primary-blue);" id="f-action-val">Pautkan laporan ini ke Insiden Paip Blok B & hantar notis kemas kini kepada penduduk.</span>
+              </div>
+            </div>
+
+            <!-- Primary Management Decision Button -->
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:auto;">
+              <button class="btn-primary" onclick="alert(currentLang === 'ms' ? 'Laporan dipautkan ke Insiden Rasmi #INC-0012.' : 'Report linked to Official Incident #INC-0012.')" id="s3-btn-link-inc">
+                <span id="s3-btn-link-text">Pautkan ke Insiden Paip Blok B</span>
+              </button>
+              <button class="btn-secondary" onclick="alert(currentLang === 'ms' ? 'Status dikemas kini ke Sedang Disemak.' : 'Status updated to Under Review.')" id="s3-btn-update-st">
+                <span id="s3-btn-update-text">Kemas Kini Status Laporan</span>
+              </button>
+            </div>
+          </aside>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer Notes & Principles -->
+    <div class="showcase-footer">
+      <h4 id="ftr-title">Prinsip Reka Bentuk PPR NADI (Design Integrity)</h4>
+      <p id="ftr-desc">
+        Reka bentuk ini menepati piawaian kontras WCAG AAA (Nisbah 7.28:1 untuk biru teks pada putih; 15.8:1 untuk arang gelap). Saiz teks asas 18px dan sasaran sentuh minimum 48px memastikan kemudahan penggunaan oleh warga emas. Tiada fungsi AI didakwa telah siap sepenuhnya; semua fungsi pintar ditandakan dengan jelas sebagai cadangan ciri akan datang.
+      </p>
+    </div>
+
+  </main>
+
+  <!-- Interactive Logic & Bilingual Translation Dictionary -->
+  <script>
+    let currentLang = 'ms';
+    let currentScreen = 1;
+    let photoCount = 1;
+
+    const i18n = {
+      ms: {
+        lblSelectScreen: "Pilih Skrin:",
+        btnScreen1: "1. Laman Penduduk (Mobile)",
+        btnScreen2: "2. Borang Lapor (Mobile)",
+        btnScreen3: "3. Barisan Pengurusan (Desktop)",
+        lblLang: "Bahasa:",
+        
+        // Meta headers
+        meta1Title: "Skrin 1: Laman Utama Penduduk (Mobile 390px)",
+        meta1Desc: "Direka khas untuk warga emas dan komuniti PPR. Teks saiz besar (18px), butang minimum 48px, warna biru dominan berkontras tinggi (7.28:1). Notis rasmi menjawab 5 soalan penting.",
+        meta2Title: "Skrin 2: Borang Lapor Masalah (Mobile 390px)",
+        meta2Desc: "Borang ringkas dan padat. Tiada pilihan keutamaan rendah/tinggi yang mengelirukan (penduduk menyatakan fakta). Dua butang jelas untuk kamera & galeri, dengan pemulihan kegagalan foto.",
+        meta3Title: "Skrin 3: Barisan Laporan Pengurusan (Desktop 1440px)",
+        meta3Desc: "Ruang kerja pengurusan 1440px yang tenang dan profesional tanpa kad KPI hiasan. Barisan jadual tersusun menunjukkan masalah, lokasi, laporan serupa, dan cadangan AI dengan sebab yang jelas.",
+        
+        // Screen 1
+        s1ResidentCardLabel: "Kediaman Anda:",
+        s1ResidentCardAddress: "PPR Sentosa, Blok B, Unit 12-08",
+        s1BtnLaporText: "Lapor Masalah Baru",
+        s1NoticesTitle: "Notis Rasmi Kawasan",
+        s1NoticeBadge: "PENTING",
+        s1NoticeTitle: "Pembaikan Paip Utama Blok B Sedang Dijalankan",
+        s1Q1Label: "Apa yang berlaku?",
+        s1Q1Text: "Paip utama pecah di bilik pam aras bawah.",
+        s1Q2Label: "Kawasan terjejas:",
+        s1Q2Text: "Tingkat 8 hingga Tingkat 16 (Blok B).",
+        s1Q3Label: "Tindakan pihak pengurusan:",
+        s1Q3Text: "Kontraktor paip sedang menggantikan injap rosak. Jangka siap jam 5:00 petang.",
+        s1Q4Label: "Apa yang perlu anda buat?",
+        s1Q4Text: "Tangki simpanan kecemasan dibuka di hadapan surau Blok B untuk kegunaan memasak.",
+        s1NoticeTime: "Dikemas kini: Hari ini, 2:15 petang oleh Pengurusan PPR Sentosa",
+        s1MyReportsTitle: "Laporan Saya",
+        s1MyReportsTotal: "1 Laporan Aktif",
+        s1RepCategory: "Bekalan Air Terputus",
+        s1RepDate: "17 Okt 2026, 11:30 pagi • Blok B, Tkt 12",
+        s1RepStatus: "Sedang Disemak",
+        s1BtnViewAllText: "Lihat Perkembangan Laporan",
+        navHome: "Utama",
+        navReport: "Lapor",
+        navMyReports: "Laporan Saya",
+        
+        // Screen 2
+        s2BtnBack: "Kembali",
+        s2HeaderTitle: "Borang Laporan",
+        s2LocationLabel: "Lokasi Anda (Automatik):",
+        s2LocationValue: "PPR Sentosa — Blok B, Unit 12-08",
+        s2LblCategory: "1. Pilih Kategori Masalah",
+        s2CatWater: "Bekalan Air",
+        s2CatLift: "Lif",
+        s2CatLight: "Lampu Koridor",
+        s2LblDesc: "2. Ceritakan Masalah Yang Berlaku",
+        s2HintDesc: "Contoh: Air paip keluar perlahan dan keruh sejak pagi tadi di bilik air tingkat 12.",
+        s2LblPhotos: "3. Gambar Bukti (Pilihan)",
+        s2PhotoCounter: "1 daripada 3 gambar",
+        s2HintPhotos: "Ambil gambar paip, lif atau lokasi rosak jika selamat untuk berbuat demikian.",
+        s2BtnCameraText: "Ambil Gambar",
+        s2BtnGalleryText: "Pilih Dari Galeri",
+        s2BtnRemovePhoto: "Padam",
+        s2ErrTitle: "Ralat Muat Naik Gambar",
+        s2ErrMsg: "Laporan sudah disimpan. Gambar ini belum berjaya dilampirkan. Sila tekan butang di bawah untuk cuba semula tanpa mengisi borang baru.",
+        s2BtnRetry: "Cuba Muat Naik Semula",
+        s2PlannedTag: "CADANGAN CIRI AKAN DATANG",
+        s2VoiceTitle: "Laporan Melalui Suara (Pilihan Tambahan)",
+        s2VoiceDesc: "Untuk penduduk yang sukar menaip: bercakap dalam Bahasa Melayu, sistem sediakan draf untuk disemak dan disahkan sebelum dihantar.",
+        s2BtnVoiceText: "Ceritakan Melalui Suara",
+        s2BtnSubmitText: "Hantar Laporan",
+        
+        // Confirmation
+        s2ConfirmTitle: "Laporan Anda Sudah Diterima",
+        s2ConfirmRefLabel: "Nombor Rujukan Laporan:",
+        s2ConfirmTimelineTitle: "Apa Yang Berlaku Seterusnya?",
+        s2Step1: "Pegawai pengurusan PPR Sentosa akan menyemak laporan anda dalam tempoh 24 jam.",
+        s2Step2: "Juruteknik atau kontraktor ditugaskan sekiranya pengesahan di tapak diperlukan.",
+        s2Step3: "Anda akan menerima kemas kini status secara automatik pada halaman \"Laporan Saya\".",
+        s2BtnDoneText: "Lihat Laporan Saya",
+        s2BtnNewRepText: "Buat Laporan Lain",
+
+        // Screen 3
+        s3UserName: "Pengurus: En. Mohd Razak (Blok A & B)",
+        s3SidebarMenu: "Menu Operasi",
+        s3MenuIncoming: "Laporan Masuk",
+        s3MenuIncidents: "Insiden Berpusat",
+        s3MenuNotices: "Notis Rasmi Awam",
+        s3MenuArchive: "Arkib Selesai",
+        s3PageTitle: "Barisan Semakan Laporan Masuk",
+        s3PageDesc: "Semak fakta aduan penduduk, tentukan pengesahan tapak, dan pautkan laporan serupa kepada insiden berpusat.",
+        s3BtnRefresh: "Segarkan Barisan",
+        thProblem: "Masalah & Rujukan",
+        thLocation: "Lokasi",
+        thReports: "Laporan Berkaitan",
+        thStatus: "Status Semasa",
+        thAction: "Tindakan Seterusnya",
+        
+        r1Title: "Bekalan air paip terputus sepenuhnya",
+        r1Loc: "Blok B (Tingkat 12)",
+        r1Related: "4 Aduan Serupa",
+        r1Status: "Sedang Disemak",
+        r1BtnAct: "Sahkan Insiden",
+        
+        r2Title: "Lif No. 2 tersangkut di tingkat 5",
+        r2Loc: "Blok A",
+        r2Related: "2 Aduan",
+        r2Status: "Dalam Tindakan",
+        r2BtnAct: "Kemas Kini Kontraktor",
+        
+        r3Title: "Lampu koridor berkelip dan padam",
+        r3Loc: "Blok B (Tingkat 4)",
+        r3Related: "1 Aduan",
+        r3Status: "Diterima",
+        r3BtnAct: "Tugaskan Juruteknik",
+        
+        r4Title: "Injap limpahan tangki aras bumbung",
+        r4Loc: "Blok C",
+        r4Related: "1 Aduan",
+        r4Status: "Selesai",
+        r4BtnAct: "Telah Ditutup",
+        
+        triageTitle: "Perincian Laporan #LPR-2026-0842",
+        triageSub: "Pengadu: En. Shamsul (Blok B, Unit 12-08)",
+        aiTagLbl: "CADANGAN CIRI AKAN DATANG",
+        aiPriorityVal: "Cadangan Keutamaan: TINGGI",
+        aiReasonsTitle: "Sebab Cadangan AI:",
+        aiR1: "Gangguan bekalan air dikesan merentasi pelbagai tingkat (Tkt 8, 10, 12, 14 Blok B).",
+        aiR2: "Terdapat 4 laporan aduan serupa dalam tempoh masa kurang dari 2 jam.",
+        aiR3: "Melibatkan keperluan utiliti asas penduduk warga emas dan keluarga.",
+        aiDisclaimerTxt: "*Nota: Keputusan keutamaan muktamad ditentukan oleh Pengurus Fasiliti. AI hanya memberikan cadangan berpandukan fakta teks laporan tanpa anggaran peratusan rekaan.",
+        fResidentLbl: "Maklumat Dari Penduduk:",
+        fResidentVal: "\"Paip sinki dapur tidak mengeluarkan air langsung sejak jam 8 pagi. Tekanan air sifar.\"",
+        fEvidenceLbl: "Bukti Lampiran:",
+        fEvidenceVal: "1 Foto (paip_sinki_rosak.jpg — Sah)",
+        fVerifiedLbl: "Fakta Disahkan Pengurusan:",
+        fVerifiedVal: "Injap pam utama pecah di bilik pam aras bawah. Kontraktor sedang bekerja.",
+        fActionLbl: "Tindakan Workflow Seterusnya:",
+        fActionVal: "Pautkan laporan ini ke Insiden Paip Blok B & hantar notis kemas kini kepada penduduk.",
+        s3BtnLinkText: "Pautkan ke Insiden Paip Blok B",
+        s3BtnUpdateText: "Kemas Kini Status Laporan",
+        
+        ftrTitle: "Prinsip Reka Bentuk PPR NADI (Design Integrity)",
+        ftrDesc: "Reka bentuk ini menepati piawaian kontras WCAG AAA (Nisbah 7.28:1 untuk biru teks pada putih; 15.8:1 untuk arang gelap). Saiz teks asas 18px dan sasaran sentuh minimum 48px memastikan kemudahan penggunaan oleh warga emas. Tiada fungsi AI didakwa telah siap sepenuhnya; semua fungsi pintar ditandakan dengan jelas sebagai cadangan ciri akan datang."
+      },
+      en: {
+        lblSelectScreen: "Select Screen:",
+        btnScreen1: "1. Resident Home (Mobile)",
+        btnScreen2: "2. Report Form (Mobile)",
+        btnScreen3: "3. Management Queue (Desktop)",
+        lblLang: "Language:",
+        
+        // Meta headers
+        meta1Title: "Screen 1: Resident Home (Mobile 390px)",
+        meta1Desc: "Designed specifically for older adults and PPR community residents. Large text (18px), buttons at least 48px, high-contrast dominant deep blue (7.28:1). Official notice answers the 5 essential questions.",
+        meta2Title: "Screen 2: Incident Report Form (Mobile 390px)",
+        meta2Desc: "Short and compact form. No confusing Low/High priority dropdowns (residents report facts). Two distinct buttons for camera & gallery, with robust photo failure recovery.",
+        meta3Title: "Screen 3: Management Report Queue (Desktop 1440px)",
+        meta3Desc: "A calm, professional 1440px desktop workspace without decorative KPI clutter. Structured queue table shows problems, locations, related reports, and explainable AI recommendations with clear reasons.",
+        
+        // Screen 1
+        s1ResidentCardLabel: "Your Residence:",
+        s1ResidentCardAddress: "PPR Sentosa, Block B, Unit 12-08",
+        s1BtnLaporText: "Report a New Problem",
+        s1NoticesTitle: "Official Area Notices",
+        s1NoticeBadge: "IMPORTANT",
+        s1NoticeTitle: "Block B Main Water Pipe Repair In Progress",
+        s1Q1Label: "What happened?",
+        s1Q1Text: "Main pipe burst in the ground floor pump room.",
+        s1Q2Label: "Affected area:",
+        s1Q2Text: "Floors 8 to 16 (Block B).",
+        s1Q3Label: "What management is doing:",
+        s1Q3Text: "Plumbing contractors are replacing the damaged valve. Estimated completion: 5:00 PM.",
+        s1Q4Label: "What should you do?",
+        s1Q4Text: "Emergency water storage tank opened in front of Block B surau for cooking and drinking needs.",
+        s1NoticeTime: "Updated: Today, 2:15 PM by PPR Sentosa Management",
+        s1MyReportsTitle: "My Reports",
+        s1MyReportsTotal: "1 Active Report",
+        s1RepCategory: "Water Supply Outage",
+        s1RepDate: "17 Oct 2026, 11:30 AM • Block B, Floor 12",
+        s1RepStatus: "Under Review",
+        s1BtnViewAllText: "View Report Progress",
+        navHome: "Home",
+        navReport: "Report",
+        navMyReports: "My Reports",
+        
+        // Screen 2
+        s2BtnBack: "Back",
+        s2HeaderTitle: "Report Form",
+        s2LocationLabel: "Your Location (Automatic):",
+        s2LocationValue: "PPR Sentosa — Block B, Unit 12-08",
+        s2LblCategory: "1. Select Problem Category",
+        s2CatWater: "Water Supply",
+        s2CatLift: "Elevator",
+        s2CatLight: "Corridor Lighting",
+        s2LblDesc: "2. Describe What Happened",
+        s2HintDesc: "Example: Water is running very slow and cloudy since this morning in floor 12 bathroom.",
+        s2LblPhotos: "3. Photo Evidence (Optional)",
+        s2PhotoCounter: "1 of 3 photos",
+        s2HintPhotos: "Take a photo of the pipe, lift, or damaged area if safe to do so.",
+        s2BtnCameraText: "Take Photo",
+        s2BtnGalleryText: "Choose From Gallery",
+        s2BtnRemovePhoto: "Remove",
+        s2ErrTitle: "Photo Upload Issue",
+        s2ErrMsg: "Report has been saved. This photo could not be attached yet. Please press the button below to retry without submitting a new form.",
+        s2BtnRetry: "Retry Uploading Photo",
+        s2PlannedTag: "PLANNED FUTURE FEATURE",
+        s2VoiceTitle: "Voice-Assisted Reporting (Optional Variant)",
+        s2VoiceDesc: "For residents who find typing difficult: speak naturally in Bahasa Melayu or English, system prepares a draft for you to review and confirm before submitting.",
+        s2BtnVoiceText: "Speak to Report",
+        s2BtnSubmitText: "Submit Report",
+        
+        // Confirmation
+        s2ConfirmTitle: "Your Report Has Been Received",
+        s2ConfirmRefLabel: "Report Reference Number:",
+        s2ConfirmTimelineTitle: "What Happens Next?",
+        s2Step1: "PPR Sentosa management officers will review your report within 24 hours.",
+        s2Step2: "A technician or maintenance contractor is dispatched if on-site verification is needed.",
+        s2Step3: "You will receive status updates automatically on your \"My Reports\" page.",
+        s2BtnDoneText: "View My Reports",
+        s2BtnNewRepText: "Submit Another Report",
+
+        // Screen 3
+        s3UserName: "Manager: Mr. Mohd Razak (Blocks A & B)",
+        s3SidebarMenu: "Operations Menu",
+        s3MenuIncoming: "Incoming Reports",
+        s3MenuIncidents: "Central Incidents",
+        s3MenuNotices: "Official Public Notices",
+        s3MenuArchive: "Resolved Archive",
+        s3PageTitle: "Incoming Reports Review Queue",
+        s3PageDesc: "Review resident reported facts, coordinate on-site verification, and link duplicate reports to central incidents.",
+        s3BtnRefresh: "Refresh Queue",
+        thProblem: "Problem & Reference",
+        thLocation: "Location",
+        thReports: "Related Reports",
+        thStatus: "Current Status",
+        thAction: "Next Action",
+        
+        r1Title: "Complete water supply outage",
+        r1Loc: "Block B (Floor 12)",
+        r1Related: "4 Similar Reports",
+        r1Status: "Under Review",
+        r1BtnAct: "Confirm Incident",
+        
+        r2Title: "Lift No. 2 stuck on floor 5",
+        r2Loc: "Block A",
+        r2Related: "2 Reports",
+        r2Status: "In Progress",
+        r2BtnAct: "Update Contractor",
+        
+        r3Title: "Corridor light flickering and dead",
+        r3Loc: "Block B (Floor 4)",
+        r3Related: "1 Report",
+        r3Status: "Received",
+        r3BtnAct: "Assign Technician",
+        
+        r4Title: "Rooftop water tank overflow valve",
+        r4Loc: "Block C",
+        r4Related: "1 Report",
+        r4Status: "Resolved",
+        r4BtnAct: "Closed",
+        
+        triageTitle: "Report Details #LPR-2026-0842",
+        triageSub: "Reporter: Mr. Shamsul (Block B, Unit 12-08)",
+        aiTagLbl: "PLANNED FUTURE FEATURE",
+        aiPriorityVal: "Suggested Priority: HIGH",
+        aiReasonsTitle: "AI Recommendation Reasons:",
+        aiR1: "Water supply outage detected across multiple floors simultaneously (Flr 8, 10, 12, 14 Block B).",
+        aiR2: "4 similar resident reports received within a 2-hour window.",
+        aiR3: "Directly affects basic living utilities for senior residents and families.",
+        aiDisclaimerTxt: "*Note: Final priority decisions are strictly determined by the Facility Manager. AI suggestions are based on report facts without fabricated confidence percentages.",
+        fResidentLbl: "Resident-Reported Information:",
+        fResidentVal: "\"Kitchen sink pipe has zero water output since 8 AM. Complete loss of water pressure.\"",
+        fEvidenceLbl: "Attached Evidence:",
+        fEvidenceVal: "1 Photo (paip_sinki_rosak.jpg — Valid)",
+        fVerifiedLbl: "Management-Verified Facts:",
+        fVerifiedVal: "Main pump valve burst in ground floor pump room. Plumbers currently on site.",
+        fActionLbl: "Next Workflow Action:",
+        fActionVal: "Link this report to Block B Water Pipe Incident & publish update notice to residents.",
+        s3BtnLinkText: "Link to Block B Pipe Incident",
+        s3BtnUpdateText: "Update Report Status",
+        
+        ftrTitle: "PPR NADI Design Integrity & Standards",
+        ftrDesc: "This design satisfies WCAG AAA contrast requirements (7.28:1 for deep blue on white; 15.8:1 for charcoal). Standard 18px body typography and 48px minimum touch targets ensure comfortable usability for older adults. No planned AI capabilities are falsely presented as currently running."
+      }
+    };
+
+    function updateLanguageUI() {
+      const d = i18n[currentLang];
+      
+      // Top bar
+      document.getElementById('lbl-select-screen').textContent = d.lblSelectScreen;
+      document.getElementById('btn-screen-1').textContent = d.btnScreen1;
+      document.getElementById('btn-screen-2').textContent = d.btnScreen2;
+      document.getElementById('btn-screen-3').textContent = d.btnScreen3;
+      document.getElementById('lbl-language').textContent = d.lblLang;
+      
+      document.getElementById('btn-lang-ms').classList.toggle('active', currentLang === 'ms');
+      document.getElementById('btn-lang-en').classList.toggle('active', currentLang === 'en');
+      
+      // Meta headers
+      if (currentScreen === 1) {
+        document.getElementById('meta-title').textContent = d.meta1Title;
+        document.getElementById('meta-desc').textContent = d.meta1Desc;
+      } else if (currentScreen === 2) {
+        document.getElementById('meta-title').textContent = d.meta2Title;
+        document.getElementById('meta-desc').textContent = d.meta2Desc;
+      } else {
+        document.getElementById('meta-title').textContent = d.meta3Title;
+        document.getElementById('meta-desc').textContent = d.meta3Desc;
+      }
+      
+      // Screen 1
+      document.getElementById('s1-lang-btn-text').textContent = currentLang === 'ms' ? 'Tukar ke EN' : 'Switch to BM';
+      document.getElementById('s1-resident-card-label').textContent = d.s1ResidentCardLabel;
+      document.getElementById('s1-resident-card-address').textContent = d.s1ResidentCardAddress;
+      document.getElementById('s1-btn-lapor-text').textContent = d.s1BtnLaporText;
+      document.getElementById('s1-notices-title').textContent = d.s1NoticesTitle;
+      document.getElementById('s1-notice-badge').textContent = d.s1NoticeBadge;
+      document.getElementById('s1-notice-title').textContent = d.s1NoticeTitle;
+      document.getElementById('s1-q1-label').textContent = d.s1Q1Label;
+      document.getElementById('s1-q1-text').textContent = d.s1Q1Text;
+      document.getElementById('s1-q2-label').textContent = d.s1Q2Label;
+      document.getElementById('s1-q2-text').textContent = d.s1Q2Text;
+      document.getElementById('s1-q3-label').textContent = d.s1Q3Label;
+      document.getElementById('s1-q3-text').textContent = d.s1Q3Text;
+      document.getElementById('s1-q4-label').textContent = d.s1Q4Label;
+      document.getElementById('s1-q4-text').textContent = d.s1Q4Text;
+      document.getElementById('s1-notice-time').textContent = d.s1NoticeTime;
+      document.getElementById('s1-my-reports-title').textContent = d.s1MyReportsTitle;
+      document.getElementById('s1-my-reports-total').textContent = d.s1MyReportsTotal;
+      document.getElementById('s1-rep-category').textContent = d.s1RepCategory;
+      document.getElementById('s1-rep-date').textContent = d.s1RepDate;
+      document.getElementById('s1-rep-status').textContent = d.s1RepStatus;
+      document.getElementById('s1-btn-view-all-text').textContent = d.s1BtnViewAllText;
+      document.getElementById('nav-home').textContent = d.navHome;
+      document.getElementById('nav-report').textContent = d.navReport;
+      document.getElementById('nav-my-reports').textContent = d.navMyReports;
+      
+      // Screen 2
+      document.getElementById('s2-lang-btn-text').textContent = currentLang === 'ms' ? 'Tukar ke EN' : 'Switch to BM';
+      document.getElementById('s2-btn-back').textContent = d.s2BtnBack;
+      document.getElementById('s2-header-title').textContent = d.s2HeaderTitle;
+      document.getElementById('s2-location-label').textContent = d.s2LocationLabel;
+      document.getElementById('s2-location-value').textContent = d.s2LocationValue;
+      document.getElementById('s2-lbl-category').textContent = d.s2LblCategory;
+      document.getElementById('s2-cat-water').textContent = d.s2CatWater;
+      document.getElementById('s2-cat-lift').textContent = d.s2CatLift;
+      document.getElementById('s2-cat-light').textContent = d.s2CatLight;
+      document.getElementById('s2-lbl-desc').textContent = d.s2LblDesc;
+      document.getElementById('s2-hint-desc').textContent = d.s2HintDesc;
+      document.getElementById('s2-lbl-photos').textContent = d.s2LblPhotos;
+      document.getElementById('s2-photo-counter').textContent = `${photoCount} ${currentLang === 'ms' ? 'daripada 3 gambar' : 'of 3 photos'}`;
+      document.getElementById('s2-hint-photos').textContent = d.s2HintPhotos;
+      document.getElementById('s2-btn-camera-text').textContent = d.s2BtnCameraText;
+      document.getElementById('s2-btn-gallery-text').textContent = d.s2BtnGalleryText;
+      if (document.getElementById('s2-btn-remove-photo')) {
+        document.getElementById('s2-btn-remove-photo').textContent = d.s2BtnRemovePhoto;
+      }
+      document.getElementById('s2-err-title').textContent = d.s2ErrTitle;
+      document.getElementById('s2-err-msg').textContent = d.s2ErrMsg;
+      document.getElementById('s2-btn-retry').textContent = d.s2BtnRetry;
+      document.getElementById('s2-planned-tag').textContent = d.s2PlannedTag;
+      document.getElementById('s2-voice-title').textContent = d.s2VoiceTitle;
+      document.getElementById('s2-voice-desc').textContent = d.s2VoiceDesc;
+      document.getElementById('s2-btn-voice-text').textContent = d.s2BtnVoiceText;
+      document.getElementById('s2-btn-submit-text').textContent = d.s2BtnSubmitText;
+      
+      document.getElementById('s2-confirm-title').textContent = d.s2ConfirmTitle;
+      document.getElementById('s2-confirm-ref-label').textContent = d.s2ConfirmRefLabel;
+      document.getElementById('s2-confirm-timeline-title').textContent = d.s2ConfirmTimelineTitle;
+      document.getElementById('s2-step-1').textContent = d.s2Step1;
+      document.getElementById('s2-step-2').textContent = d.s2Step2;
+      document.getElementById('s2-step-3').textContent = d.s2Step3;
+      document.getElementById('s2-btn-done-text').textContent = d.s2BtnDoneText;
+      document.getElementById('s2-btn-new-rep-text').textContent = d.s2BtnNewRepText;
+      document.getElementById('nav-home-2').textContent = d.navHome;
+      document.getElementById('nav-report-2').textContent = d.navReport;
+      document.getElementById('nav-my-reports-2').textContent = d.navMyReports;
+
+      // Screen 3
+      document.getElementById('s3-lang-btn-text').textContent = currentLang === 'ms' ? 'Tukar ke EN' : 'Switch to BM';
+      document.getElementById('s3-user-name').textContent = d.s3UserName;
+      document.getElementById('s3-sidebar-menu').textContent = d.s3SidebarMenu;
+      document.getElementById('s3-menu-incoming').textContent = d.s3MenuIncoming;
+      document.getElementById('s3-menu-incidents').textContent = d.s3MenuIncidents;
+      document.getElementById('s3-menu-notices').textContent = d.s3MenuNotices;
+      document.getElementById('s3-menu-archive').textContent = d.s3MenuArchive;
+      document.getElementById('s3-page-title').textContent = d.s3PageTitle;
+      document.getElementById('s3-page-desc').textContent = d.s3PageDesc;
+      document.getElementById('s3-btn-refresh').textContent = d.s3BtnRefresh;
+      document.getElementById('th-problem').textContent = d.thProblem;
+      document.getElementById('th-location').textContent = d.thLocation;
+      document.getElementById('th-reports').textContent = d.thReports;
+      document.getElementById('th-status').textContent = d.thStatus;
+      document.getElementById('th-action').textContent = d.thAction;
+
+      document.getElementById('r1-title').textContent = d.r1Title;
+      document.getElementById('r1-loc').textContent = d.r1Loc;
+      document.getElementById('r1-related').textContent = d.r1Related;
+      document.getElementById('r1-status').textContent = d.r1Status;
+      document.getElementById('r1-btn-act').textContent = d.r1BtnAct;
+
+      document.getElementById('r2-title').textContent = d.r2Title;
+      document.getElementById('r2-loc').textContent = d.r2Loc;
+      document.getElementById('r2-related').textContent = d.r2Related;
+      document.getElementById('r2-status').textContent = d.r2Status;
+      document.getElementById('r2-btn-act').textContent = d.r2BtnAct;
+
+      document.getElementById('r3-title').textContent = d.r3Title;
+      document.getElementById('r3-loc').textContent = d.r3Loc;
+      document.getElementById('r3-related').textContent = d.r3Related;
+      document.getElementById('r3-status').textContent = d.r3Status;
+      document.getElementById('r3-btn-act').textContent = d.r3BtnAct;
+
+      document.getElementById('r4-title').textContent = d.r4Title;
+      document.getElementById('r4-loc').textContent = d.r4Loc;
+      document.getElementById('r4-related').textContent = d.r4Related;
+      document.getElementById('r4-status').textContent = d.r4Status;
+      document.getElementById('r4-btn-act').textContent = d.r4BtnAct;
+
+      document.getElementById('triage-title').textContent = d.triageTitle;
+      document.getElementById('triage-sub').textContent = d.triageSub;
+      document.getElementById('ai-tag-lbl').textContent = d.aiTagLbl;
+      document.getElementById('ai-priority-val').textContent = d.aiPriorityVal;
+      document.getElementById('ai-reasons-title').textContent = d.aiReasonsTitle;
+      document.getElementById('ai-r1').textContent = d.aiR1;
+      document.getElementById('ai-r2').textContent = d.aiR2;
+      document.getElementById('ai-r3').textContent = d.aiR3;
+      document.getElementById('ai-disclaimer-txt').textContent = d.aiDisclaimerTxt;
+      document.getElementById('f-resident-lbl').textContent = d.fResidentLbl;
+      document.getElementById('f-resident-val').textContent = d.fResidentVal;
+      document.getElementById('f-evidence-lbl').textContent = d.fEvidenceLbl;
+      document.getElementById('f-evidence-val').textContent = d.fEvidenceVal;
+      document.getElementById('f-verified-lbl').textContent = d.fVerifiedLbl;
+      document.getElementById('f-verified-val').textContent = d.fVerifiedVal;
+      document.getElementById('f-action-lbl').textContent = d.fActionLbl;
+      document.getElementById('f-action-val').textContent = d.fActionVal;
+      document.getElementById('s3-btn-link-text').textContent = d.s3BtnLinkText;
+      document.getElementById('s3-btn-update-text').textContent = d.s3BtnUpdateText;
+
+      document.getElementById('ftr-title').textContent = d.ftrTitle;
+      document.getElementById('ftr-desc').textContent = d.ftrDesc;
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      updateLanguageUI();
+    }
+
+    function toggleLanguage() {
+      setLanguage(currentLang === 'ms' ? 'en' : 'ms');
+    }
+
+    function switchScreen(screenNum) {
+      currentScreen = screenNum;
+      
+      document.getElementById('screen-1-wrapper').classList.toggle('active', screenNum === 1);
+      document.getElementById('screen-2-wrapper').classList.toggle('active', screenNum === 2);
+      document.getElementById('screen-3-wrapper').classList.toggle('active', screenNum === 3);
+      
+      document.getElementById('btn-screen-1').classList.toggle('active', screenNum === 1);
+      document.getElementById('btn-screen-2').classList.toggle('active', screenNum === 2);
+      document.getElementById('btn-screen-3').classList.toggle('active', screenNum === 3);
+
+      updateLanguageUI();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function selectCategory(cat) {
+      document.getElementById('cat-water').classList.toggle('selected', cat === 'water');
+      document.getElementById('cat-lift').classList.toggle('selected', cat === 'lift');
+      document.getElementById('cat-light').classList.toggle('selected', cat === 'light');
+    }
+
+    function simulateAddPhoto(source) {
+      if (photoCount >= 3) {
+        alert(currentLang === 'ms' ? 'Maksimum 3 keping gambar sahaja dibenarkan.' : 'Maximum 3 photos allowed.');
+        return;
+      }
+      photoCount++;
+      const id = 'photo-item-' + Date.now();
+      const div = document.createElement('div');
+      div.className = 'photo-preview-item';
+      div.id = id;
+      div.innerHTML = `
+        <div class="photo-thumb-info">
+          <div class="photo-thumb-icon">${source === 'Kamera' ? '📷' : '🖼️'}</div>
+          <div class="photo-name-bytes">
+            <span class="photo-filename">${source === 'Kamera' ? 'kamera_bukti_' + photoCount + '.jpg' : 'galeri_foto_' + photoCount + '.jpg'}</span>
+            <span class="photo-size">1.2 MB • ${currentLang === 'ms' ? 'Berjaya dimuat naik' : 'Upload successful'}</span>
+          </div>
+        </div>
+        <button type="button" class="btn-remove-photo" onclick="removePhoto('${id}')">${currentLang === 'ms' ? 'Padam' : 'Remove'}</button>
+      `;
+      document.getElementById('photo-list').appendChild(div);
+      document.getElementById('s2-photo-counter').textContent = `${photoCount} ${currentLang === 'ms' ? 'daripada 3 gambar' : 'of 3 photos'}`;
+    }
+
+    function removePhoto(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.remove();
+        photoCount = Math.max(0, photoCount - 1);
+        document.getElementById('s2-photo-counter').textContent = `${photoCount} ${currentLang === 'ms' ? 'daripada 3 gambar' : 'of 3 photos'}`;
+      }
+    }
+
+    function openVoiceModal() {
+      const msg = currentLang === 'ms' 
+        ? "CIRI AKAN DATANG:\n\n1. Penduduk bercakap: 'Air paip bilik air tingkat 12 tak keluar sejak pagi.'\n2. AI transkrip dan susun draf aduan.\n3. Penduduk dengar semula atau baca draf.\n4. Penduduk sahkan draf sebelum dihantar.\n\n(AI tidak mereka-reka fakta yang tiada)"
+        : "PLANNED FUTURE FEATURE:\n\n1. Resident speaks: 'Bathroom pipe on floor 12 has no water since morning.'\n2. AI transcribes and structures draft report.\n3. Resident listens or reads draft.\n4. Resident confirms draft before submitting.\n\n(AI does not invent missing facts)";
+      alert(msg);
+    }
+
+    function submitReportForm() {
+      document.getElementById('report-form-container').style.display = 'none';
+      document.getElementById('confirmation-container').style.display = 'flex';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+      document.getElementById('report-form-container').style.display = 'flex';
+      document.getElementById('confirmation-container').style.display = 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function retryPhotoUpload() {
+      document.getElementById('photo-error-banner').style.display = 'none';
+      alert(currentLang === 'ms' ? 'Foto berjaya dipautkan semula kepada laporan sedia ada (#LPR-2026-0842).' : 'Photo successfully recovered and linked to existing report (#LPR-2026-0842).');
+    }
+
+    // Initialize UI on load
+    updateLanguageUI();
+  </script>
+
+</body>
+</html>

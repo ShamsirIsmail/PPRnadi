@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+:root {
+  /* ==========================================================================
+     PPR NADI DESIGN TOKENS (Clean, Accessible & Senior-Friendly)
+     No gradients. No glassmorphism. Dominant deep blue on pure white.
+     ========================================================================== */
+  --bg-white: #FFFFFF;
+  --bg-surface-subtle: #F0F5FC; /* Very light blue for secondary surfaces */
+  --bg-surface-neutral: #F8F9FA; /* Light warm neutral grey */
+  
+  --color-primary-blue: #1554AD; /* Deep accessible blue - 7.28:1 contrast on white (WCAG AAA) */
+  --color-primary-blue-hover: #0E3E85;
+  --color-primary-blue-active: #0A2E63;
+  --color-primary-blue-tint: #EBF3FC;
+  
+  --color-text-charcoal: #17212F; /* 15.8:1 contrast on white (WCAG AAA) */
+  --color-text-muted: #374151; /* Dark slate grey for secondary text - 7.5:1 contrast */
+  --color-text-on-blue: #FFFFFF;
+  
+  --color-border: #CBD5E1; /* Clearly visible neutral border (>= 3:1 non-text contrast) */
+  --color-border-focused: #1554AD;
+  
+  /* Semantic Alert Colours (Used sparingly alongside text and icons) */
+  --color-warning-bg: #FEF9C3; /* Pale yellow */
+  --color-warning-border: #CA8A04;
+  --color-warning-text: #713F12; /* 9.8:1 contrast on yellow */
+  
+  --color-danger-bg: #FEF2F2; /* Pale red */
+  --color-danger-border: #DC2626;
+  --color-danger-text: #991B1B; /* 8.5:1 contrast on pale red */
+  --color-danger-btn: #B91C1C;
+  
+  /* Touch target standard */
+  --min-touch-target: 48px;
+}
+
+body {
+  background-color: #FFFFFF;
+  color: var(--color-text-charcoal);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Accessibility Focus Outlines */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--color-primary-blue);
+  outline-offset: 2px;
+}
+
+/* Mobile Senior Friendly Font Sizes */
+.resident-body {
+  font-size: 1.125rem; /* ~18px */
+  line-height: 1.6;
+}
+
+.resident-supporting {
+  font-size: 1rem; /* ~16px */
+  line-height: 1.5;
+}
+
+/* Ensure fixed bottom navigation never overlaps keyboard or content */
+.pb-safe-bottom {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+}
