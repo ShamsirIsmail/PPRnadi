@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
+import { validateStagingApiUrl, ALLOWED_STAGING_REF } from './staging-validation.mjs';
 
 /**
  * PPR NADI — Staging Demo Account Provisioning Script
@@ -19,7 +20,7 @@ if (fs.existsSync('.env.staging.local')) {
   } catch {}
 }
 
-const EXPECTED_REF = 'mhtlcvvqwxkhkeqhzbrk';
+const EXPECTED_REF = ALLOWED_STAGING_REF;
 
 async function main() {
   const projectRef = process.env.STAGING_PROJECT_REF;
@@ -50,21 +51,14 @@ async function main() {
     process.exit(1);
   }
 
-  // 2. Reject any local/loopback target
-  const lowerUrl = supabaseUrl.toLowerCase();
-  if (
-    lowerUrl.includes('localhost') ||
-    lowerUrl.includes('127.0.0.1') ||
-    lowerUrl.includes('::1') ||
-    lowerUrl.includes('0.0.0.0')
-  ) {
-    console.error('[Error] Safety Violation: STAGING_SUPABASE_URL points to local loopback interface.');
+  // 2. Strict API URL security validation
+  try {
+    validateStagingApiUrl(supabaseUrl, EXPECTED_REF);
+  } catch (err) {
+    console.error('[Error] Security Violation on STAGING_SUPABASE_URL:', err.message);
     process.exit(1);
   }
-  if (!lowerUrl.includes(EXPECTED_REF)) {
-    console.error(`[Error] Safety Violation: STAGING_SUPABASE_URL does not contain project reference [${EXPECTED_REF}].`);
-    process.exit(1);
-  }
+
 
   console.log(`[Staging Provision] Connecting to staging project: ${EXPECTED_REF}...`);
   const sb = createClient(supabaseUrl, serviceRoleKey, {
