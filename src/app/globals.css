@@ -99,3 +99,20 @@ select:focus-visible {
   }
 }
 
+/* Bell Ring Animation for Management Notification */
+@keyframes nadi-ref-ring {
+  25% { transform: rotate(18deg); }
+  75% { transform: rotate(-18deg); }
+}
+
+.bell-ring-active {
+  animation: nadi-ref-ring 0.6s ease-in-out 3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bell-ring-active {
+    animation: none !important;
+  }
+}
+
+
