@@ -95,18 +95,6 @@ export function ManagementDashboardClient({
   // State
   const [reports, setReports] = useState<DashboardReportItem[]>(initialReports);
   const [stats, setStats] = useState<DashboardStats>(initialStats);
-  const [prevInitialReports, setPrevInitialReports] = useState(initialReports);
-  const [prevInitialStats, setPrevInitialStats] = useState(initialStats);
-
-  if (initialReports !== prevInitialReports) {
-    setPrevInitialReports(initialReports);
-    setReports(initialReports);
-  }
-  if (initialStats !== prevInitialStats) {
-    setPrevInitialStats(initialStats);
-    setStats(initialStats);
-  }
-
   const [tabFilter, setTabFilter] = useState<'new' | 'active' | 'done'>('new');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [selectedFacilityCategory, setSelectedFacilityCategory] = useState<FacilityCategory | null>(null);
