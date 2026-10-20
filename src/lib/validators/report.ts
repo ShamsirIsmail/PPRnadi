@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const facilityCategorySchema = z.enum(['water_supply', 'lift', 'corridor_lighting']);
+export const facilityCategorySchema = z.enum(['water_supply', 'lift', 'corridor_lighting', 'other']);
 export const urgencyHintSchema = z.enum(['low', 'medium', 'high', 'urgent']);
 
 export const residentReportSchema = z.object({

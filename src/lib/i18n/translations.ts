@@ -144,6 +144,8 @@ export const translations = {
       liftHint: 'Pintu, butang dan pergerakan',
       catLighting: 'Lampu koridor',
       lightingHint: 'Koridor dan tangga',
+      catOther: 'Lain-lain',
+      otherHint: 'Kerosakan lain di kawasan perumahan',
       voiceHeading: 'Bantuan suara',
       voiceOptionalBadge: 'Pilihan',
       voiceSubtext: 'Tak perlu taip panjang. Ceritakan masalah dan semak draf yang disediakan.',
@@ -251,10 +253,10 @@ export const translations = {
       chooseGalleryBtn: 'Pilih dari galeri',
       cameraDeniedNotice: 'Kebenaran kamera tidak diberikan. Anda boleh memilih gambar daripada galeri atau meneruskan tanpa gambar.',
       // Mode selection
-      startVoiceBtn: 'Aduan suara',
-      startVoiceDesc: 'NADI bantu susun aduan anda.',
+      startVoiceBtn: 'Aduan berpandu',
+      startVoiceDesc: 'Dengar arahan dan pilih jawapan.',
       startManualBtn: 'Taip sendiri',
-      startManualDesc: 'Borang manual pantas',
+      startManualDesc: 'Borang teks lengkap seperti biasa.',
       // Post-Submit
       savedTitle: 'Aduan Berjaya Dihantar',
       savedSubtitle: 'Laporan anda telah direkodkan dengan selamat dalam sistem PPR NADI.',
@@ -313,6 +315,7 @@ export const translations = {
       water_supply: 'Bekalan Air',
       lift: 'Lif Penumpang',
       corridor_lighting: 'Lampu Koridor',
+      other: 'Lain-lain',
     },
     management: {
       headerTitle: 'PPR NADI — Pengurusan Fasiliti',
@@ -561,6 +564,8 @@ export const translations = {
       liftHint: 'Doors, buttons and movement',
       catLighting: 'Corridor lighting',
       lightingHint: 'Corridors and stairs',
+      catOther: 'Other Issues',
+      otherHint: 'Other facility or estate issues',
       voiceHeading: 'Voice assistance',
       voiceOptionalBadge: 'Optional',
       voiceSubtext: 'Skip the long typing. Describe the problem and review the prepared draft.',
@@ -668,10 +673,10 @@ export const translations = {
       chooseGalleryBtn: 'Choose from gallery',
       cameraDeniedNotice: 'Camera permission was not granted. You can choose photos from your gallery or continue without photos.',
       // Mode selection
-      startVoiceBtn: 'Voice report',
-      startVoiceDesc: 'NADI helps organise your report.',
-      startManualBtn: 'Type instead',
-      startManualDesc: 'Quick manual form',
+      startVoiceBtn: 'Guided report',
+      startVoiceDesc: 'Listen to instructions and tap answers.',
+      startManualBtn: 'Type manually',
+      startManualDesc: 'Standard complete form input.',
       // Post-Submit
       savedTitle: 'Report Successfully Submitted',
       savedSubtitle: 'Your report has been safely recorded in the PPR NADI system.',
@@ -730,6 +735,7 @@ export const translations = {
       water_supply: 'Water Supply',
       lift: 'Elevator',
       corridor_lighting: 'Corridor Lighting',
+      other: 'Other Issues',
     },
     management: {
       headerTitle: 'PPR NADI — Facility Management',

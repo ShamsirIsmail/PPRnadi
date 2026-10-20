@@ -111,6 +111,8 @@ export function ResidentHomeClient({
         return t.reportForm.catLift || 'Lif Penumpang';
       case 'corridor_lighting':
         return t.reportForm.catLighting || 'Lampu Koridor';
+      case 'other':
+        return t.reportForm.catOther || (locale === 'ms' ? 'Lain-lain' : 'Other Issues');
       default:
         return cat;
     }

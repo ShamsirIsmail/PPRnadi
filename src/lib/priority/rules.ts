@@ -102,9 +102,10 @@ export function evaluatePriorityRules(
   const isAmenityDisruption =
     reportCategory === 'water_supply' ||
     reportCategory === 'lift' ||
-    facts.issueType.toLowerCase().includes('air') ||
-    facts.issueType.toLowerCase().includes('water') ||
-    facts.issueType.toLowerCase().includes('lif');
+    (typeof facts.issueType === 'string' &&
+      (facts.issueType.toLowerCase().includes('air') ||
+        facts.issueType.toLowerCase().includes('water') ||
+        facts.issueType.toLowerCase().includes('lif')));
 
   if (isAmenityDisruption) {
     const relatedCount = facts.relatedReportsCount ?? 0;
@@ -159,8 +160,9 @@ export function evaluatePriorityRules(
   // RULE R-03: Localized Disruption / Corridor Lighting (Single light out, alternatives present)
   const isLighting =
     reportCategory === 'corridor_lighting' ||
-    facts.issueType.toLowerCase().includes('lampu') ||
-    facts.issueType.toLowerCase().includes('light');
+    (typeof facts.issueType === 'string' &&
+      (facts.issueType.toLowerCase().includes('lampu') ||
+        facts.issueType.toLowerCase().includes('light')));
 
   if (isLighting) {
     recommendedPriority = 'standard_review';
@@ -184,6 +186,34 @@ export function evaluatePriorityRules(
     return {
       recommendedPriority,
       needsMoreInfo,
+      ruleIds,
+      primaryReasons,
+      verificationQuestions: { ms: questionsMs, en: questionsEn },
+      unknowns: { ms: unknownsMs, en: unknownsEn },
+      ruleBasisExplanation,
+      policyVersion: POLICY_VERSION,
+      evaluatedAt,
+    };
+  }
+
+  // RULE R-04: Other Category / Open Maintenance Request (Direct Management Review)
+  if (reportCategory === 'other') {
+    recommendedPriority = 'standard_review';
+    ruleIds.push('R-04');
+    primaryReasons = {
+      ms: 'Aduan kategori lain-lain memerlukan penilaian manual pihak pengurusan untuk menentukan skop dan tindakan pembaikan.',
+      en: 'Reports under other categories require manual evaluation by management to determine scope and repair action.',
+    };
+    ruleBasisExplanation = {
+      ms: 'R-04 · Kategori lain-lain; tertakluk pada semakan manual pengurusan',
+      en: 'R-04 · Other category; subject to manual management review',
+    };
+    questionsMs.push('Apakah skop kerosakan dan adakah ia memerlukan pembekal perkhidmatan luar?');
+    questionsEn.push('What is the scope of damage and does it require an external service contractor?');
+
+    return {
+      recommendedPriority,
+      needsMoreInfo: true,
       ruleIds,
       primaryReasons,
       verificationQuestions: { ms: questionsMs, en: questionsEn },

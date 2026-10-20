@@ -3,7 +3,7 @@
 // ==============================================================================
 
 export type UserRole = 'resident' | 'management';
-export type FacilityCategory = 'water_supply' | 'lift' | 'corridor_lighting';
+export type FacilityCategory = 'water_supply' | 'lift' | 'corridor_lighting' | 'other';
 export type FacilityStatus = 'operational' | 'degraded' | 'offline';
 export type ZoneType = 'residential_floors' | 'lobby' | 'lift_shaft' | 'roof_tank' | 'basement';
 export type DependencyType = 'primary_feeder' | 'secondary_feeder' | 'lighting_circuit' | 'vertical_transport';

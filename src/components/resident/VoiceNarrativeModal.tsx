@@ -635,6 +635,7 @@ export function VoiceNarrativeModal({
     water_supply: t.reportForm.catWater,
     lift: t.reportForm.catLift,
     corridor_lighting: t.reportForm.catLighting,
+    other: t.reportForm.catOther,
   };
 
   const hasExistingDescription = Boolean(existingDescription.trim());

@@ -26,6 +26,7 @@ import {
 import type { FacilityCategory } from '@/types/database';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { GuidedVoiceAssistant } from '@/components/resident/GuidedVoiceAssistant';
+import { GuidedFourStepFlow } from '@/components/resident/GuidedFourStepFlow';
 import { VoiceCorrectionModal } from '@/components/resident/VoiceCorrectionModal';
 import type { ReportDraftResult, ExistingDraftContext } from '@/app/actions/ai-draft';
 
@@ -67,8 +68,8 @@ export function LaporForm({
   const { t, locale, toggleLocale } = useTranslation();
   const [state, formAction, isPending] = useActionState(submitResidentReport, null);
 
-  // Mode Selection: null (picker) | 'manual'
-  const [activeEntryMode, setActiveEntryMode] = useState<'picker' | 'manual'>('picker');
+  // Mode Selection: null (picker) | 'guided' | 'manual'
+  const [activeEntryMode, setActiveEntryMode] = useState<'picker' | 'guided' | 'manual'>('picker');
 
   // Guided Voice Modal
   const [isVoiceAssistantOpen, setIsVoiceAssistantOpen] = useState(false);
@@ -84,7 +85,7 @@ export function LaporForm({
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>(defaultBuildingId);
   const [selectedFloor, setSelectedFloor] = useState<string>('');
   const [category, setCategory] = useState<FacilityCategory>(
-    initialCategory && ['water_supply', 'lift', 'corridor_lighting'].includes(initialCategory)
+    initialCategory && ['water_supply', 'lift', 'corridor_lighting', 'other'].includes(initialCategory)
       ? initialCategory
       : 'water_supply'
   );
@@ -198,6 +199,27 @@ export function LaporForm({
     }
   }, [state?.reportId, reconcileResult?.reportId]);
 
+  // Play success audio only AFTER confirmed save
+  useEffect(() => {
+    const reportId = state?.reportId || reconcileResult?.reportId;
+    if (reportId && (state?.reportSaved || state?.success)) {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+          const text =
+            locale === 'ms'
+              ? 'Aduan anda sudah dihantar. Anda boleh semak perkembangannya dalam Aduan Saya.'
+              : 'Your report has been submitted. You can track its progress in My Reports.';
+          const utt = new SpeechSynthesisUtterance(text);
+          utt.lang = locale === 'ms' ? 'ms-MY' : 'en-US';
+          utt.rate = 0.95;
+          window.speechSynthesis.speak(utt);
+        } catch {
+          // Ignore audio errors
+        }
+      }
+    }
+  }, [state?.reportId, state?.reportSaved, state?.success, reconcileResult?.reportId, locale]);
+
   // Active target building calculation
   const targetBuilding =
     buildings.find((b) => b.id === selectedBuildingId) ||
@@ -214,8 +236,8 @@ export function LaporForm({
 
   // Floor Bounds Validation
   const maxFloor = typeof targetBuilding.total_floors === 'number' ? targetBuilding.total_floors : null;
-  const numFloor = selectedFloor ? parseInt(selectedFloor, 10) : null;
-  const isFloorOutOfBounds = maxFloor !== null && numFloor !== null && numFloor > maxFloor;
+  const numFloor = selectedFloor && selectedFloor !== 'G' && selectedFloor !== 'unknown' ? parseInt(selectedFloor, 10) : null;
+  const isFloorOutOfBounds = maxFloor !== null && numFloor !== null && !isNaN(numFloor) && numFloor > maxFloor;
 
   // Photo handlers
   const validateAndAddFiles = (newFiles: File[]) => {
@@ -408,13 +430,15 @@ export function LaporForm({
     formData.set('urgency_hint', 'medium'); // Resident NEVER chooses priority
 
     let effectiveZone = selectedZone;
-    if (!effectiveZone && selectedFloor) {
+    if (!effectiveZone && selectedFloor && selectedFloor !== 'G' && selectedFloor !== 'unknown') {
       const fNum = parseInt(selectedFloor, 10);
-      const matchedZone = availableBuildingZones.find(
-        (z) => typeof z.floor_start === 'number' && typeof z.floor_end === 'number' && fNum >= z.floor_start && fNum <= z.floor_end
-      );
-      if (matchedZone) {
-        effectiveZone = matchedZone.id;
+      if (!isNaN(fNum)) {
+        const matchedZone = availableBuildingZones.find(
+          (z) => typeof z.floor_start === 'number' && typeof z.floor_end === 'number' && fNum >= z.floor_start && fNum <= z.floor_end
+        );
+        if (matchedZone) {
+          effectiveZone = matchedZone.id;
+        }
       }
     }
 
@@ -428,7 +452,13 @@ export function LaporForm({
     let finalDesc = description.trim();
     const locParts: string[] = [];
     if (selectedFloor) {
-      locParts.push(selectedFloor === '1' ? 'Tingkat Bawah / Aras 1' : `Tingkat ${selectedFloor}`);
+      if (selectedFloor === 'G') {
+        locParts.push(locale === 'ms' ? 'Aras Bawah' : 'Ground Floor');
+      } else if (selectedFloor === 'unknown') {
+        locParts.push(locale === 'ms' ? 'Tingkat Belum Pasti' : 'Floor Uncertain');
+      } else {
+        locParts.push(locale === 'ms' ? `Tingkat ${selectedFloor}` : `Floor ${selectedFloor}`);
+      }
     }
     if (specificLocation.trim()) {
       locParts.push(specificLocation.trim());
@@ -530,6 +560,7 @@ export function LaporForm({
     water_supply: t.reportForm.catWater,
     lift: t.reportForm.catLift,
     corridor_lighting: t.reportForm.catLighting,
+    other: t.reportForm.catOther,
   };
 
   // ---------------------------------------------------------------------------
@@ -1038,7 +1069,44 @@ export function LaporForm({
   }
 
   // ---------------------------------------------------------------------------
-  // VIEW C: START SCREEN (2 Simple Entry Modes: Ceritakan Masalah / Taip Sendiri)
+  // VIEW B2: 4-STEP GUIDED WORKFLOW (Lokasi -> Masalah -> Bukti -> Semak)
+  // ---------------------------------------------------------------------------
+  if (activeEntryMode === 'guided') {
+    return (
+      <GuidedFourStepFlow
+        buildings={buildings}
+        assignedBuildingId={assignedBuildingId}
+        assignedBuildingName={targetBuilding.name}
+        unitNumber={unitNumber}
+        residentName={residentName || ''}
+        selectedBuildingId={selectedBuildingId}
+        setSelectedBuildingId={setSelectedBuildingId}
+        selectedFloor={selectedFloor}
+        setSelectedFloor={setSelectedFloor}
+        category={category}
+        setCategory={setCategory}
+        description={description}
+        setDescription={setDescription}
+        specificLocation={specificLocation}
+        setSpecificLocation={setSpecificLocation}
+        selectedImages={selectedImages}
+        onAddImages={validateAndAddFiles}
+        onRemoveImage={removeFile}
+        onSubmit={() => {
+          const fd = new FormData();
+          handleSubmitReport(fd);
+        }}
+        isSubmitting={isPending}
+        validationError={validationError || (state && !state.success ? (state.error ?? null) : null)}
+        setValidationError={setValidationError}
+        onSwitchToManual={() => setActiveEntryMode('manual')}
+        onBackToStart={() => setActiveEntryMode('picker')}
+      />
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // VIEW C: START SCREEN (2 Simple Entry Modes: Aduan Berpandu / Taip Sendiri)
   // ---------------------------------------------------------------------------
   return (
     <div className="max-w-xl mx-auto space-y-6 pb-12">
@@ -1070,32 +1138,44 @@ export function LaporForm({
         </div>
       </div>
 
-      {/* 2 Primary Action Buttons: Aduan Suara & Taip Sendiri */}
+      {/* 2 Primary Action Buttons: Aduan Berpandu & Taip Sendiri */}
       <div className="flex flex-col gap-3">
-        {/* Button 1: Aduan Suara (Solid Blue, ~54px height, outline mic icon ~20px, no box behind icon, centered) */}
+        {/* Button 1: Aduan Berpandu */}
         <button
           type="button"
-          onClick={() => setIsVoiceAssistantOpen(true)}
-          className="w-full min-h-[54px] h-[54px] px-5 rounded-xl bg-[#1554AD] text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-xs hover:bg-[#0E3E85] active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-[#1554AD] focus-visible:outline-offset-2 transition-all cursor-pointer"
-          data-testid="start-voice-assistant-button"
+          onClick={() => setActiveEntryMode('guided')}
+          className="w-full min-h-[58px] px-5 py-3 rounded-2xl bg-[#1554AD] text-white font-bold text-base flex items-center justify-between shadow-xs hover:bg-[#0E3E85] active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-[#1554AD] focus-visible:outline-offset-2 transition-all cursor-pointer"
+          data-testid="start-guided-flow-button"
         >
-          <Mic className="w-5 h-5 text-white shrink-0 stroke-[2]" />
-          <span>{t.reportForm.startVoiceBtn}</span>
+          <div className="flex items-center gap-3 text-left">
+            <Mic className="w-5 h-5 text-white shrink-0 stroke-[2.2]" />
+            <div>
+              <div className="text-base font-extrabold leading-tight">{t.reportForm.startVoiceBtn}</div>
+              <div className="text-xs font-normal text-blue-100">{t.reportForm.startVoiceDesc}</div>
+            </div>
+          </div>
+          <ArrowRight className="w-5 h-5 text-white/80 shrink-0" />
         </button>
 
-        {/* Button 2: Taip Sendiri (White with thin outline, ~54px height, pencil icon ~20px, centered) */}
+        {/* Button 2: Taip Sendiri */}
         <button
           type="button"
           onClick={() => setActiveEntryMode('manual')}
-          className={`w-full min-h-[54px] h-[54px] px-5 rounded-xl border-1.5 font-bold text-base flex items-center justify-center gap-2.5 active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-[#1554AD] focus-visible:outline-offset-2 transition-all cursor-pointer ${
+          className={`w-full min-h-[58px] px-5 py-3 rounded-2xl border-1.5 font-bold text-base flex items-center justify-between active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-[#1554AD] focus-visible:outline-offset-2 transition-all cursor-pointer ${
             activeEntryMode === 'manual'
               ? 'bg-blue-50/50 border-[#1554AD] text-[#1554AD]'
               : 'bg-white border-slate-300 text-slate-800 hover:bg-slate-50 hover:border-slate-400'
           }`}
           data-testid="start-manual-form-button"
         >
-          <PenLine className="w-5 h-5 text-slate-600 shrink-0 stroke-[1.8]" />
-          <span>{t.reportForm.startManualBtn}</span>
+          <div className="flex items-center gap-3 text-left">
+            <PenLine className="w-5 h-5 text-slate-600 shrink-0 stroke-[1.8]" />
+            <div>
+              <div className="text-base font-extrabold text-slate-900 leading-tight">{t.reportForm.startManualBtn}</div>
+              <div className="text-xs font-normal text-slate-500">{t.reportForm.startManualDesc}</div>
+            </div>
+          </div>
+          <ArrowRight className="w-5 h-5 text-slate-400 shrink-0" />
         </button>
       </div>
 
@@ -1117,7 +1197,7 @@ export function LaporForm({
               {t.reportForm.stepCategory}
             </label>
             <div className="grid grid-cols-3 gap-2">
-              {(['water_supply', 'lift', 'corridor_lighting'] as FacilityCategory[]).map((cat) => {
+              {(['water_supply', 'lift', 'corridor_lighting', 'other'] as FacilityCategory[]).map((cat) => {
                 const isSelected = category === cat;
                 return (
                   <button

@@ -229,6 +229,7 @@ export function IncidentsClient({ incidents, buildings, facilities }: IncidentsC
                   <option value="water_supply">{t.categories.water_supply}</option>
                   <option value="lift">{t.categories.lift}</option>
                   <option value="corridor_lighting">{t.categories.corridor_lighting}</option>
+                  <option value="other">{t.categories.other}</option>
                 </select>
               </div>
 

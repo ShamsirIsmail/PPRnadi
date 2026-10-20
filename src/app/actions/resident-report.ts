@@ -33,7 +33,7 @@ export interface ReportRecoveryStatus {
   statusChanged: boolean;
 }
 
-const ALLOWED_CATEGORIES: FacilityCategory[] = ['water_supply', 'lift', 'corridor_lighting'];
+const ALLOWED_CATEGORIES: FacilityCategory[] = ['water_supply', 'lift', 'corridor_lighting', 'other'];
 const ALLOWED_URGENCIES: UrgencyHint[] = ['low', 'medium', 'high', 'urgent'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 

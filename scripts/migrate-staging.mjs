@@ -88,7 +88,8 @@ const MIGRATIONS = [
   '20261019130000_priority_security_hardening.sql',
   '20261019140000_priority_evaluation_protection_and_locking.sql',
   '20261019150000_incident_link_immutability.sql',
-  '20261019160000_desa_rejang_demo_estate.sql'
+  '20261019160000_desa_rejang_demo_estate.sql',
+  '20261020120000_support_other_category.sql'
 ];
 
 export async function runStagingMigrations(dbUrl, projectRef) {

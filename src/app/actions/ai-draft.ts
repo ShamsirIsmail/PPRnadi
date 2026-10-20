@@ -73,7 +73,7 @@ export interface ReportDraftResult {
   retryAfterSeconds?: number;
 }
 
-const ALLOWED_CATEGORIES: FacilityCategory[] = ['water_supply', 'lift', 'corridor_lighting'];
+const ALLOWED_CATEGORIES: FacilityCategory[] = ['water_supply', 'lift', 'corridor_lighting', 'other'];
 
 // Runtime validation schema for AI output
 const rawAiOutputSchema = z.object({
