@@ -218,7 +218,7 @@ async function runVerification() {
     if (await firstChevron.isVisible()) {
       await firstChevron.click();
       await managerPage.waitForTimeout(300);
-      const drawer = managerPage.locator('div:has-text("Ringkasan Kerosakan")').first();
+      const drawer = managerPage.locator('#management-report-detail');
       assert.ok(await drawer.isVisible(), 'Inline details drawer must open on chevron click');
       console.log('✓ Accessible chevron button expands inline details drawer.');
       await firstChevron.click(); // close drawer
@@ -247,19 +247,22 @@ async function runVerification() {
 
     // Language Switcher Test
     console.log('\n[Verification 3.5] Verifying Language Switcher (BM <-> EN)...');
-    const langBtn = managerPage.locator('button:has-text("EN"), button:has-text("BM")').first();
-    assert.ok(await langBtn.isVisible(), 'Language switcher must be visible');
-    await langBtn.click();
-    await managerPage.waitForTimeout(400);
+    const enBtn = managerPage.locator('div[role="group"][aria-label*="bahasa" i] button:has-text("EN")').first();
+    const bmBtn = managerPage.locator('div[role="group"][aria-label*="bahasa" i] button:has-text("BM")').first();
+    assert.ok(await enBtn.isVisible(), 'EN button must be visible');
+    assert.ok(await bmBtn.isVisible(), 'BM button must be visible');
 
-    const enHeading = await managerPage.locator('h1').innerText();
+    await enBtn.click();
+    await managerPage.waitForTimeout(500);
+
+    const enHeading = await managerPage.locator('main h1').first().innerText();
     assert.ok(enHeading.includes('Management Summary'), 'Header in English must include Management Summary');
     console.log('✓ Language switched to English:', enHeading);
 
     // Switch back to BM
-    await langBtn.click();
-    await managerPage.waitForTimeout(400);
-    const bmHeading = await managerPage.locator('h1').innerText();
+    await bmBtn.click();
+    await managerPage.waitForTimeout(500);
+    const bmHeading = await managerPage.locator('main h1').first().innerText();
     assert.ok(bmHeading.includes('Ringkasan pengurusan'), 'Header in BM must include Ringkasan pengurusan');
     console.log('✓ Language switched back to Bahasa Melayu:', bmHeading);
 
@@ -267,7 +270,7 @@ async function runVerification() {
     console.log('\n[Verification 3.6] Verifying Responsive Viewports (1440px & 390px)...');
     await managerPage.setViewportSize({ width: 1440, height: 900 });
     await managerPage.waitForTimeout(300);
-    const h1440 = await managerPage.locator('h1').isVisible();
+    const h1440 = await managerPage.locator('main h1').first().isVisible();
     assert.ok(h1440, 'Dashboard header visible at 1440px');
 
     // Screenshot 1440px
@@ -355,7 +358,7 @@ async function runVerification() {
     const bellRinging = (await bellSvg.count()) > 0;
     console.log('✓ Bell ringing animation triggered:', bellRinging ? 'CONFIRMED (.bell-ring-active)' : 'Completed ring cycle');
 
-    const unreadDot = managerPage.locator('span.bg-red-500.rounded-full');
+    const unreadDot = managerPage.locator('#management-bell span.rounded-full');
     assert.ok(await unreadDot.isVisible(), 'Unread red dot indicator must appear on bell');
     console.log('✓ Unread indicator dot confirmed on bell.');
 
@@ -389,12 +392,12 @@ async function runVerification() {
     const popupAfterReload = await managerPage.locator('div[role="alert"]:has-text("Aduan baharu diterima")').isVisible();
     assert.ok(!popupAfterReload, 'Notification popup must NOT re-appear after refresh (read state is persisted)');
 
-    const dotAfterReload = await managerPage.locator('span.bg-red-500.rounded-full').isVisible();
+    const dotAfterReload = await managerPage.locator('#management-bell span.rounded-full').isVisible();
     assert.ok(!dotAfterReload, 'Unread dot must NOT re-appear after refresh');
     console.log('✓ Read state persistence confirmed: browser reload does not re-trigger notifications.');
 
     // Verify newly created report is now in the table
-    const tableContent = await managerPage.locator('table').innerText();
+    const tableContent = await managerPage.locator('div.divide-y, main').first().innerText();
     assert.ok(tableContent.includes('Tingkat 5') || tableContent.includes('Lampu koridor'), 'New test report must appear in reports list');
     console.log('✓ Test report confirmed present in management reports list.');
 
