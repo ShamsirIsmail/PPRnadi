@@ -1042,88 +1042,66 @@ export function LaporForm({
   // ---------------------------------------------------------------------------
   return (
     <div className="max-w-xl mx-auto space-y-6 pb-12">
-      {/* Resident Location Banner */}
-      <div className="flex items-center justify-between bg-white border border-slate-200 rounded-3xl p-4 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#1554AD]/10 text-[#1554AD] flex items-center justify-center shrink-0">
-            <Building2 className="w-5 h-5" />
-          </div>
-          <div>
-            <strong className="text-sm font-bold text-slate-900 block">
-              {residentName || 'Penduduk'}
-            </strong>
-            <span className="text-xs text-slate-500">
-              {targetBuilding.name} · {unitNumber ? `Unit ${unitNumber}` : 'PPR Desa Rejang'}
-            </span>
-          </div>
-        </div>
+      {/* Eyebrow & Title */}
+      <div>
+        <span className="text-[11px] font-extrabold tracking-widest text-[#1554AD] uppercase block mb-1">
+          {t.reportForm.eyebrowNewReport}
+        </span>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
+          {t.reportForm.pageTitle}
+        </h1>
+        <p className="text-sm sm:text-base text-slate-600 mt-1 leading-relaxed">
+          {t.reportForm.pageSubtitle}
+        </p>
+      </div>
 
+      {/* Resident Location Banner (Dynamic Real Session Data) */}
+      <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-[#F0F5FC] border border-[#C8DCF5] text-slate-700">
+        <div className="w-10 h-10 rounded-xl bg-white border border-[#C8DCF5] text-[#1554AD] flex items-center justify-center shrink-0 shadow-xs">
+          <Building2 className="w-5 h-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <strong className="text-sm font-extrabold text-slate-900 block truncate">
+            {residentName || 'Penduduk'}
+          </strong>
+          <span className="text-xs text-slate-600 block truncate">
+            PPR Desa Rejang · {targetBuilding.name} · {unitNumber ? `Rumah ${unitNumber}` : 'Blok Kediaman'}
+          </span>
+        </div>
+      </div>
+
+      {/* 2 Primary Action Buttons: Aduan Suara & Taip Sendiri */}
+      <div className="flex flex-col gap-3">
+        {/* Button 1: Aduan Suara (Solid Blue, ~54px height, outline mic icon ~20px, no box behind icon, centered) */}
         <button
           type="button"
-          onClick={toggleLocale}
-          className="border border-slate-200 bg-white rounded-full text-xs font-bold px-3 py-1.5 min-h-[40px] text-[#1554AD] hover:bg-slate-50 transition-all cursor-pointer"
+          onClick={() => setIsVoiceAssistantOpen(true)}
+          className="w-full min-h-[54px] h-[54px] px-5 rounded-xl bg-[#1554AD] text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-xs hover:bg-[#0E3E85] active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-[#1554AD] focus-visible:outline-offset-2 transition-all cursor-pointer"
+          data-testid="start-voice-assistant-button"
         >
-          {locale === 'ms' ? 'English' : 'BM'}
+          <Mic className="w-5 h-5 text-white shrink-0 stroke-[2]" />
+          <span>{t.reportForm.startVoiceBtn}</span>
+        </button>
+
+        {/* Button 2: Taip Sendiri (White with thin outline, ~54px height, pencil icon ~20px, centered) */}
+        <button
+          type="button"
+          onClick={() => setActiveEntryMode('manual')}
+          className={`w-full min-h-[54px] h-[54px] px-5 rounded-xl border-1.5 font-bold text-base flex items-center justify-center gap-2.5 active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-[#1554AD] focus-visible:outline-offset-2 transition-all cursor-pointer ${
+            activeEntryMode === 'manual'
+              ? 'bg-blue-50/50 border-[#1554AD] text-[#1554AD]'
+              : 'bg-white border-slate-300 text-slate-800 hover:bg-slate-50 hover:border-slate-400'
+          }`}
+          data-testid="start-manual-form-button"
+        >
+          <PenLine className="w-5 h-5 text-slate-600 shrink-0 stroke-[1.8]" />
+          <span>{t.reportForm.startManualBtn}</span>
         </button>
       </div>
 
-      {/* Main Choice Cards: Ceritakan Masalah vs Taip Sendiri */}
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-            {t.reportForm.pageTitle}
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            {t.reportForm.pageSubtitle}
-          </p>
-        </div>
-
-        {/* 2 Primary Action Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          {/* Card 1: Ceritakan Masalah (Guided Voice) */}
-          <button
-            type="button"
-            onClick={() => setIsVoiceAssistantOpen(true)}
-            className="p-5 rounded-3xl border-2 border-[#1554AD] bg-[#1554AD] text-white flex flex-col items-start justify-between min-h-[140px] text-left shadow-md hover:bg-[#0E3E85] active:scale-[0.99] transition-all cursor-pointer group"
-            data-testid="start-voice-assistant-button"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-white/20 text-white flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-              <Mic className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <strong className="text-base font-extrabold block">
-                {t.reportForm.startVoiceBtn}
-              </strong>
-              <span className="text-xs text-blue-100 block mt-0.5">
-                {t.reportForm.startVoiceDesc}
-              </span>
-            </div>
-          </button>
-
-          {/* Card 2: Taip Sendiri (Manual Form) */}
-          <button
-            type="button"
-            onClick={() => setActiveEntryMode('manual')}
-            className={`p-5 rounded-3xl border-2 transition-all flex flex-col items-start justify-between min-h-[140px] text-left cursor-pointer group ${
-              activeEntryMode === 'manual'
-                ? 'border-[#1554AD] bg-blue-50/50 text-[#1554AD]'
-                : 'border-slate-200 bg-white text-slate-800 hover:border-slate-300'
-            }`}
-            data-testid="start-manual-form-button"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-              <PenLine className="w-6 h-6 text-slate-700" />
-            </div>
-            <div>
-              <strong className="text-base font-extrabold block">
-                {t.reportForm.startManualBtn}
-              </strong>
-              <span className="text-xs text-slate-500 block mt-0.5">
-                {t.reportForm.startManualDesc}
-              </span>
-            </div>
-          </button>
-        </div>
+      {/* Subtle Process Flow Note */}
+      <div className="text-xs text-center text-slate-500 pt-2 border-t border-slate-100">
+        {t.reportForm.processFlowNote}
       </div>
 
       {/* Manual Input Form (Expands when Taip Sendiri is active) */}

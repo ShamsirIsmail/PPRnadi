@@ -68,3 +68,34 @@ select:focus-visible {
 .pb-safe-bottom {
   padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
 }
+
+/* Decorative Blue Wave for Guided Voice Assistant */
+@keyframes wavePulse {
+  0%, 100% {
+    transform: scaleY(0.45);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.wave-bar-1 { animation: wavePulse 1.2s ease-in-out infinite 0.1s; }
+.wave-bar-2 { animation: wavePulse 1.2s ease-in-out infinite 0.25s; }
+.wave-bar-3 { animation: wavePulse 1.2s ease-in-out infinite 0.4s; }
+.wave-bar-4 { animation: wavePulse 1.2s ease-in-out infinite 0.55s; }
+.wave-bar-5 { animation: wavePulse 1.2s ease-in-out infinite 0.4s; }
+.wave-bar-6 { animation: wavePulse 1.2s ease-in-out infinite 0.25s; }
+.wave-bar-7 { animation: wavePulse 1.2s ease-in-out infinite 0.1s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wave-bar-1,
+  .wave-bar-2,
+  .wave-bar-3,
+  .wave-bar-4,
+  .wave-bar-5,
+  .wave-bar-6,
+  .wave-bar-7 {
+    animation: none !important;
+  }
+}
+

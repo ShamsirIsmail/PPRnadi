@@ -6,12 +6,9 @@ import {
   Square,
   Volume2,
   VolumeX,
-  Sparkles,
-  PenLine,
   X,
   AlertCircle,
   Loader2,
-  CheckCircle2,
   RotateCcw,
   ArrowRight,
   FileAudio,
@@ -778,62 +775,11 @@ export function GuidedVoiceAssistant({
       aria-labelledby="guided-voice-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
     >
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[92vh]">
         
-        {/* Header with Title & Mode Switcher */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/80">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#1554AD]/10 text-[#1554AD] flex items-center justify-center shrink-0">
-              {assistantMode === 'media_recorder' ? (
-                <FileAudio className="w-4 h-4 text-[#1554AD]" />
-              ) : (
-                <Sparkles className="w-4 h-4 text-[#1554AD]" />
-              )}
-            </div>
-            <div>
-              <h2 id="guided-voice-title" className="text-base font-bold text-slate-900 leading-tight">
-                {assistantMode === 'media_recorder'
-                  ? locale === 'ms'
-                    ? 'Rakaman Audio Alternatif'
-                    : 'Alternative Audio Recording'
-                  : t.reportForm.assistantTitle}
-              </h2>
-              <p className="text-xs text-slate-500">
-                {assistantMode === 'media_recorder'
-                  ? locale === 'ms'
-                    ? 'Sokongan iPhone & Safari · Sifar AI'
-                    : 'iPhone & Safari Support · Zero AI'
-                  : t.reportForm.assistantSubtitle}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            {assistantMode === 'speech_recognition' && (
-              <button
-                type="button"
-                onClick={() => setIsMuted((prev) => !prev)}
-                className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition-colors"
-                title={isMuted ? t.reportForm.assistantUnmute : t.reportForm.assistantMute}
-                aria-label={isMuted ? t.reportForm.assistantUnmute : t.reportForm.assistantMute}
-              >
-                {isMuted ? <VolumeX className="w-5 h-5 text-slate-400" /> : <Volume2 className="w-5 h-5 text-[#1554AD]" />}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={handleClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
-              aria-label={t.common.close}
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Mode Switcher Tabs (Accessible on any device to test alternative recording) */}
-        <div className="px-5 pt-3 pb-1 flex items-center justify-between gap-2 border-b border-slate-100 bg-white">
-          <div className="inline-flex p-1 bg-slate-100 rounded-xl text-xs font-bold text-slate-600 gap-1 w-full sm:w-auto">
+        {/* Top Header Bar */}
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-slate-50/70">
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl text-xs font-bold text-slate-600">
             <button
               type="button"
               onClick={() => {
@@ -844,7 +790,7 @@ export function GuidedVoiceAssistant({
                   setErrorMessage(getCapabilityMessage('ok_media_recorder_only', locale));
                 }
               }}
-              className={`flex-1 sm:flex-initial py-1.5 px-3 rounded-lg transition-all text-center ${
+              className={`py-1 px-2.5 rounded-lg transition-all text-center cursor-pointer ${
                 assistantMode === 'speech_recognition'
                   ? 'bg-white text-[#1554AD] shadow-xs'
                   : 'text-slate-500 hover:text-slate-900'
@@ -858,7 +804,7 @@ export function GuidedVoiceAssistant({
                 setSelectedMode('media_recorder');
                 setErrorMessage(null);
               }}
-              className={`flex-1 sm:flex-initial py-1.5 px-3 rounded-lg transition-all text-center ${
+              className={`py-1 px-2.5 rounded-lg transition-all text-center cursor-pointer ${
                 assistantMode === 'media_recorder'
                   ? 'bg-white text-[#1554AD] shadow-xs'
                   : 'text-slate-500 hover:text-slate-900'
@@ -868,35 +814,65 @@ export function GuidedVoiceAssistant({
             </button>
           </div>
 
-          <span className="hidden sm:inline-block text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-            {locale === 'ms' ? 'Sifar Panggilan AI' : 'Zero AI Calls'}
-          </span>
+          <div className="flex items-center gap-1">
+            {assistantMode === 'speech_recognition' && (
+              <button
+                type="button"
+                onClick={() => setIsMuted((prev) => !prev)}
+                className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-200/60 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+                title={isMuted ? t.reportForm.assistantUnmute : t.reportForm.assistantMute}
+                aria-label={isMuted ? t.reportForm.assistantUnmute : t.reportForm.assistantMute}
+              >
+                {isMuted ? <VolumeX className="w-5 h-5 text-slate-400" /> : <Volume2 className="w-5 h-5 text-[#1554AD]" />}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleClose}
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label={locale === 'ms' ? 'Tutup' : 'Close'}
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {/* Conversation / Recording Body */}
-        <div className="p-5 sm:p-6 space-y-4 flex-1 overflow-y-auto min-h-[290px] flex flex-col justify-center">
+        {/* Modal Body */}
+        <div className="p-5 sm:p-6 flex-1 overflow-y-auto space-y-3.5 text-center flex flex-col justify-center">
+          {/* Eyebrow, Title & Subtitle */}
+          <div>
+            <span className="text-[11px] font-extrabold tracking-widest text-[#1554AD] uppercase block mb-1">
+              {t.reportForm.eyebrowVoiceReport}
+            </span>
+            <h2 id="guided-voice-title" className="text-2xl sm:text-[26px] font-extrabold text-slate-900 tracking-tight leading-snug">
+              {t.reportForm.voiceReportTitle}
+            </h2>
+            <p className="text-sm text-slate-600 mt-1 max-w-xs mx-auto leading-relaxed">
+              {t.reportForm.voiceReportInstruction}
+            </p>
+          </div>
 
-          {/* =============================================================== */}
-          {/* VIEW A: MEDIA RECORDER ALTERNATIVE (Record + Playback, Zero AI)  */}
-          {/* =============================================================== */}
-          {assistantMode === 'media_recorder' ? (
-            <div className="space-y-4 text-center">
-              
-              {/* Status Capsule */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700">
-                <span
-                  className={`w-2.5 h-2.5 rounded-full ${
-                    isMediaRecordingActive
-                      ? 'bg-red-500 animate-pulse'
-                      : mediaRecorderState === 'recorded'
-                      ? 'bg-emerald-500'
-                      : mediaRecorderState === 'requesting'
-                      ? 'bg-amber-500 animate-spin'
-                      : 'bg-slate-400'
-                  }`}
-                />
-                <span>
-                  {mediaRecorderState === 'recording'
+          {/* Status Capsule */}
+          <div>
+            <div
+              role="status"
+              aria-live="polite"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F1F6FD] border border-[#E5EEF9] text-xs font-semibold text-[#456A9D]"
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  isMediaRecordingActive || isListening
+                    ? 'bg-red-500 animate-pulse'
+                    : mediaRecorderState === 'recorded'
+                    ? 'bg-emerald-500'
+                    : mediaRecorderState === 'requesting'
+                    ? 'bg-amber-500 animate-spin'
+                    : 'bg-[#7DA1CC]'
+                }`}
+              />
+              <span>
+                {assistantMode === 'media_recorder'
+                  ? mediaRecorderState === 'recording'
                     ? locale === 'ms'
                       ? `Sedang merakam... (${formatTimer(mediaSecondsElapsed)} / 01:00)`
                       : `Recording now... (${formatTimer(mediaSecondsElapsed)} / 01:00)`
@@ -914,196 +890,152 @@ export function GuidedVoiceAssistant({
                       : 'Recording ready to play'
                     : locale === 'ms'
                     ? 'Sedia untuk merakam'
-                    : 'Ready to record'}
+                    : 'Ready to record'
+                  : isListening
+                  ? t.reportForm.assistantListening
+                  : turn === 'processing_initial' || turn === 'processing_floor'
+                  ? t.reportForm.assistantProcessing
+                  : hasTranscript
+                  ? t.reportForm.assistantTranscriptReady
+                  : locale === 'ms'
+                  ? 'Sedia untuk merakam'
+                  : 'Ready to record'}
+              </span>
+            </div>
+          </div>
+
+          {/* Central Blue Wave Stage (Animated only during live recording) */}
+          <div
+            className="w-full py-2 my-1 flex items-center justify-center gap-2 h-24 sm:h-28 rounded-2xl"
+            style={{ background: 'radial-gradient(ellipse at center, #EAF3FF 0%, #FFFFFF 70%)' }}
+            aria-hidden="true"
+          >
+            {[16, 38, 66, 88, 66, 38, 16].map((baseHeight, idx) => {
+              const activeAnim = isMediaRecordingActive || isListening;
+              return (
+                <span
+                  key={idx}
+                  style={{ height: `${baseHeight}px` }}
+                  className={`w-3 sm:w-3.5 rounded-full bg-linear-to-t from-[#1558B7] to-[#8DC2FF] transition-all origin-center shadow-xs ${
+                    activeAnim ? `wave-bar-${idx + 1}` : ''
+                  }`}
+                />
+              );
+            })}
+          </div>
+
+          {/* Real Recording Timer */}
+          <div className="text-xs font-mono font-bold text-slate-500 tracking-wider tabular-nums">
+            {assistantMode === 'media_recorder'
+              ? `${formatTimer(mediaSecondsElapsed)} / 01:00`
+              : '00:00 / 01:00'}
+          </div>
+
+          {/* Media Recorder - Recorded Audio Preview Stage */}
+          {assistantMode === 'media_recorder' && mediaRecorderState === 'recorded' && recordedAudioUrl && (
+            <div className="p-3.5 bg-[#F8FAFC] border border-blue-200 rounded-2xl shadow-xs text-left space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-[#1554AD] flex items-center gap-1.5">
+                  <FileAudio className="w-4 h-4" />
+                  {locale === 'ms' ? 'Pratonton Audio' : 'Audio Preview'}
+                </span>
+                <span className="text-slate-500 font-mono">
+                  {mediaRecordedBytes > 0 ? `${(mediaRecordedBytes / 1024).toFixed(1)} KB` : ''} ·{' '}
+                  {getExtensionFromMime(recordedMimeType).toUpperCase()}
                 </span>
               </div>
 
-              {/* Title & Instructions */}
-              <div>
-                <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-                  {mediaRecorderState === 'recorded'
-                    ? locale === 'ms'
-                      ? 'Dengar semula audio anda'
-                      : 'Listen back to your audio'
-                    : locale === 'ms'
-                    ? 'Ceritakan masalah anda'
-                    : 'Tell us about the issue'}
-                </h3>
-                <p className="text-sm text-slate-600 mt-1 max-w-sm mx-auto leading-relaxed">
-                  {mediaRecorderState === 'recorded'
-                    ? locale === 'ms'
-                      ? 'Audio disimpan dalam memori telefon. Tekan butang main untuk dengar semula.'
-                      : 'Audio stored in memory. Press play to review your voice.'
-                    : locale === 'ms'
-                    ? 'Beritahu apa yang rosak dan di mana. Cakap seperti biasa.'
-                    : 'Tell us what is broken and where. Speak naturally.'}
-                </p>
+              {/* Native HTML5 Audio with User Controls - NO Autoplay */}
+              <audio
+                controls
+                preload="none"
+                src={recordedAudioUrl}
+                className="w-full h-11 focus:outline-none"
+              />
+
+              <div className="text-[11px] text-slate-600 bg-white border border-slate-200 p-2 rounded-lg text-center font-medium">
+                {t.reportForm.testRecordingNotice}
+              </div>
+            </div>
+          )}
+
+          {/* Speech Recognition Mode: Assistant Speech bubble / User Transcript Textarea */}
+          {assistantMode === 'speech_recognition' && (
+            <div className="space-y-3 text-left">
+              {/* AI prompt message */}
+              <div className="bg-[#EFF4FB] rounded-2xl rounded-tl-xs p-3.5 text-slate-800 text-sm font-medium leading-relaxed">
+                <strong className="block text-[11px] text-[#1554AD] uppercase tracking-wider mb-1">
+                  NADI
+                </strong>
+                {turn === 'followup_floor' || turn === 'processing_floor'
+                  ? t.reportForm.assistantFollowUpFloor
+                  : turn === 'announcing_ready'
+                  ? t.reportForm.assistantDraftReady
+                  : t.reportForm.assistantGreeting}
               </div>
 
-              {/* Central Waveform Stage (Static when inactive, animated strictly during live recording) */}
-              <div className="py-4 px-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center justify-center gap-3">
-                <div className="flex items-center justify-center gap-1.5 h-16" aria-hidden="true">
-                  {[20, 38, 56, 32, 48, 62, 36, 22].map((height, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        height: isMediaRecordingActive ? `${Math.min(60, height * 1.1)}px` : '18px',
-                        transition: 'height 0.2s ease, opacity 0.2s ease',
+              {/* Editable Transcript */}
+              {(isListening || hasTranscript || turn === 'processing_initial' || turn === 'processing_floor') && (
+                <div className="bg-white border border-[#C8DCF5] rounded-2xl p-3 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs text-[#1554AD] font-semibold">
+                    <span>{t.reportForm.assistantTranscriptReady}</span>
+                  </div>
+                  {isListening ? (
+                    <p className="text-slate-800 text-sm leading-relaxed min-h-[44px]">
+                      {transcript || <span className="italic text-slate-400">{t.reportForm.assistantListening}</span>}
+                    </p>
+                  ) : (
+                    <textarea
+                      rows={2}
+                      value={transcript}
+                      onChange={(e) => {
+                        setTranscript(e.target.value);
+                        transcriptRef.current = e.target.value;
                       }}
-                      className={`w-2.5 rounded-full ${
-                        isMediaRecordingActive
-                          ? 'bg-linear-to-t from-[#1554AD] to-[#60A5FA] animate-pulse'
-                          : 'bg-slate-300'
-                      }`}
+                      disabled={turn === 'processing_initial' || turn === 'processing_floor'}
+                      className="w-full p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-medium focus:outline-none focus:border-[#1554AD] resize-none"
+                      placeholder={locale === 'ms' ? 'Sunting teks di sini...' : 'Edit text here...'}
                     />
-                  ))}
-                </div>
-
-                <div className="text-xs font-mono font-bold text-slate-500 tabular-nums">
-                  {formatTimer(mediaSecondsElapsed)} / 01:00 (Maks 60s · 5MB)
-                </div>
-              </div>
-
-              {/* Audio Playback Element (Available in recorded state, starts strictly upon user pressing play) */}
-              {mediaRecorderState === 'recorded' && recordedAudioUrl && (
-                <div className="p-4 bg-white border border-blue-200 rounded-2xl shadow-xs text-left space-y-2.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-[#1554AD] flex items-center gap-1.5">
-                      <FileAudio className="w-4 h-4" />
-                      {locale === 'ms' ? 'Pratonton Audio Tempatan' : 'Local Audio Preview'}
-                    </span>
-                    <span className="text-slate-500 font-mono">
-                      {mediaRecordedBytes > 0 ? `${(mediaRecordedBytes / 1024).toFixed(1)} KB` : ''} ·{' '}
-                      {getExtensionFromMime(recordedMimeType).toUpperCase()}
-                    </span>
-                  </div>
-
-                  {/* Native HTML5 Audio with User Controls - NO Autoplay */}
-                  <audio
-                    controls
-                    preload="none"
-                    src={recordedAudioUrl}
-                    className="w-full h-11 focus:outline-hidden"
-                  />
-
-                  <div className="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg leading-normal">
-                    💡{' '}
-                    {locale === 'ms'
-                      ? 'Ujian rakaman sahaja. Audio tidak dimuat naik atau dihantar ke mana-mana pelayan.'
-                      : 'Test recording only. Audio is never uploaded or sent to any server.'}
-                  </div>
-                </div>
-              )}
-
-              {/* Informational notices */}
-              {mediaNotice && (
-                <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs text-left flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                  <span>{mediaNotice}</span>
+                  )}
                 </div>
               )}
             </div>
-          ) : (
-            /* =============================================================== */
-            /* VIEW B: SPEECH RECOGNITION CONVERSATION (Desktop / Android)     */
-            /* =============================================================== */
-            <>
-              {/* Assistant Prompt Bubble */}
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#1554AD] text-white flex items-center justify-center shrink-0 shadow-xs font-bold text-sm">
-                  AI
-                </div>
-                <div className="bg-slate-100 rounded-2xl rounded-tl-xs px-4 py-3 text-slate-800 text-base md:text-lg font-medium leading-relaxed max-w-[85%]">
-                  {turn === 'followup_floor' || turn === 'processing_floor'
-                    ? t.reportForm.assistantFollowUpFloor
-                    : turn === 'announcing_ready'
-                    ? t.reportForm.assistantDraftReady
-                    : t.reportForm.assistantGreeting}
-                </div>
-              </div>
-
-              {/* User Live Transcript Bubble or Editable Textarea */}
-              {(isListening || hasTranscript || turn === 'processing_initial' || turn === 'processing_floor') && (
-                <div className="flex items-start gap-3 justify-end">
-                  <div className="w-full max-w-[88%] bg-[#1554AD]/10 border border-[#1554AD]/20 rounded-2xl rounded-tr-xs p-3.5 space-y-2">
-                    <div className="flex items-center justify-between text-xs text-[#1554AD] font-semibold">
-                      <span>
-                        {isListening
-                          ? t.reportForm.assistantListening
-                          : turn === 'processing_initial' || turn === 'processing_floor'
-                          ? t.reportForm.assistantProcessing
-                          : t.reportForm.assistantTranscriptReady}
-                      </span>
-                    </div>
-
-                    {isListening ? (
-                      <p className="text-[#0E3E85] text-base leading-relaxed break-words min-h-[48px]">
-                        {transcript || <span className="italic text-slate-400">{t.reportForm.assistantListening}</span>}
-                      </p>
-                    ) : (
-                      <textarea
-                        rows={2}
-                        value={transcript}
-                        onChange={(e) => {
-                          setTranscript(e.target.value);
-                          transcriptRef.current = e.target.value;
-                        }}
-                        disabled={turn === 'processing_initial' || turn === 'processing_floor'}
-                        className="w-full p-2 rounded-xl bg-white border border-slate-200 text-[#0E3E85] text-base font-medium focus:outline-hidden focus:border-[#1554AD] resize-none"
-                        placeholder={locale === 'ms' ? 'Taip atau sunting di sini...' : 'Type or edit here...'}
-                      />
-                    )}
-                  </div>
-                  <div className="w-9 h-9 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 font-bold text-xs">
-                    {locale === 'ms' ? 'Anda' : 'You'}
-                  </div>
-                </div>
-              )}
-
-              {/* Success State Animation */}
-              {turn === 'announcing_ready' && (
-                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-3 animate-in zoom-in-95 duration-200">
-                  <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
-                  <div className="text-sm font-semibold">
-                    {locale === 'ms'
-                      ? 'Draf berjaya disediakan! Membuka skrin semakan...'
-                      : 'Draft prepared! Opening review screen...'}
-                  </div>
-                </div>
-              )}
-            </>
           )}
 
           {/* Error Message Notice */}
           {errorMessage && (
-            <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-700 flex items-start gap-2.5 text-sm">
-              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div role="alert" className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm flex items-start gap-2 text-left">
+              <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {/* Informational notices */}
+          {mediaNotice && (
+            <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs text-left flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+              <span>{mediaNotice}</span>
             </div>
           )}
         </div>
 
         {/* Action Controls Area (Minimum 44px touch targets, 54px buttons) */}
-        <div className="p-4 sm:p-5 border-t border-slate-100 bg-slate-50/60 flex flex-col gap-2.5">
-          
-          {/* =============================================================== */}
-          {/* CONTROLS: MEDIA RECORDER MODE                                  */}
-          {/* =============================================================== */}
+        <div className="p-4 sm:p-5 border-t border-slate-100 bg-white flex flex-col gap-2.5">
           {assistantMode === 'media_recorder' ? (
             <>
               {mediaRecorderState === 'ready' && (
                 <button
                   type="button"
                   onClick={startAlternativeRecording}
-                  className="w-full min-h-[54px] h-[54px] rounded-2xl bg-[#1554AD] text-white font-bold text-base flex items-center justify-center gap-3 shadow-md hover:bg-[#0E3E85] active:scale-[0.99] transition-all cursor-pointer"
+                  className="w-full min-h-[54px] h-[54px] rounded-xl bg-[#1554AD] text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-xs hover:bg-[#0E3E85] active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-[#1554AD] focus-visible:outline-offset-2 transition-all cursor-pointer"
                 >
-                  <Mic className="w-5 h-5 text-white" />
+                  <Mic className="w-5 h-5 text-white shrink-0 stroke-[2]" />
                   <span>{locale === 'ms' ? 'Mula rakaman' : 'Start recording'}</span>
                 </button>
               )}
 
               {mediaRecorderState === 'requesting' && (
-                <div className="w-full min-h-[54px] h-[54px] rounded-2xl bg-slate-200 text-slate-700 font-semibold text-base flex items-center justify-center gap-3">
+                <div className="w-full min-h-[54px] h-[54px] rounded-xl bg-slate-100 text-slate-700 font-semibold text-base flex items-center justify-center gap-2.5">
                   <Loader2 className="w-5 h-5 animate-spin text-[#1554AD]" />
                   <span>{locale === 'ms' ? 'Menunggu kebenaran mikrofon...' : 'Awaiting microphone access...'}</span>
                 </div>
@@ -1113,7 +1045,7 @@ export function GuidedVoiceAssistant({
                 <button
                   type="button"
                   onClick={() => stopAlternativeRecording('user')}
-                  className="w-full min-h-[54px] h-[54px] rounded-2xl bg-red-600 text-white font-bold text-base flex items-center justify-center gap-3 shadow-md hover:bg-red-700 active:scale-[0.99] transition-all animate-pulse cursor-pointer"
+                  className="w-full min-h-[54px] h-[54px] rounded-xl bg-[#DC2626] text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-xs hover:bg-[#B91C1C] active:scale-[0.99] transition-all cursor-pointer"
                 >
                   <Square className="w-5 h-5 fill-white text-white" />
                   <span>{locale === 'ms' ? 'Selesai bercakap' : 'Done speaking'}</span>
@@ -1121,53 +1053,48 @@ export function GuidedVoiceAssistant({
               )}
 
               {mediaRecorderState === 'stopping' && (
-                <div className="w-full min-h-[54px] h-[54px] rounded-2xl bg-slate-200 text-slate-700 font-semibold text-base flex items-center justify-center gap-3">
+                <div className="w-full min-h-[54px] h-[54px] rounded-xl bg-slate-100 text-slate-700 font-semibold text-base flex items-center justify-center gap-2.5">
                   <Loader2 className="w-5 h-5 animate-spin text-[#1554AD]" />
                   <span>{locale === 'ms' ? 'Memproses fail audio...' : 'Processing audio...'}</span>
                 </div>
               )}
 
               {mediaRecorderState === 'recorded' && (
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    type="button"
-                    onClick={handleReRecord}
-                    className="flex-1 min-h-[54px] h-[54px] px-4 rounded-2xl border-1.5 border-slate-300 bg-white text-slate-800 font-bold text-base hover:bg-slate-50 flex items-center justify-center gap-2 transition-all cursor-pointer"
-                  >
-                    <RotateCcw className="w-4 h-4 text-slate-600" />
-                    <span>{locale === 'ms' ? 'Rakam semula' : 'Record again'}</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleReRecord}
+                  className="w-full min-h-[54px] h-[54px] px-4 rounded-xl border-1.5 border-slate-300 bg-white text-slate-800 font-bold text-base hover:bg-slate-50 flex items-center justify-center gap-2 active:scale-[0.99] transition-all cursor-pointer"
+                >
+                  <RotateCcw className="w-4 h-4 text-slate-600" />
+                  <span>{locale === 'ms' ? 'Rakam semula' : 'Record again'}</span>
+                </button>
               )}
             </>
           ) : (
-            /* =============================================================== */
-            /* CONTROLS: SPEECH RECOGNITION MODE                              */
-            /* =============================================================== */
             <>
-              {/* TURN 1 CONTROLS */}
+              {/* Speech Recognition Controls */}
               {(turn === 'greeting' || turn === 'processing_initial') && (
                 <>
                   {isListening ? (
                     <button
                       type="button"
                       onClick={handleStopAndProcessInitial}
-                      className="w-full min-h-[54px] h-[54px] rounded-2xl bg-red-600 text-white font-bold text-base flex items-center justify-center gap-3 shadow-md hover:bg-red-700 active:scale-[0.99] transition-all animate-pulse cursor-pointer"
+                      className="w-full min-h-[54px] h-[54px] rounded-xl bg-[#DC2626] text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-xs hover:bg-[#B91C1C] active:scale-[0.99] transition-all cursor-pointer"
                     >
                       <Square className="w-5 h-5 fill-white text-white" />
                       <span>{t.reportForm.assistantStopSpeaking}</span>
                     </button>
                   ) : turn === 'processing_initial' ? (
-                    <div className="w-full min-h-[54px] h-[54px] rounded-2xl bg-slate-200 text-slate-700 font-semibold text-base flex items-center justify-center gap-3">
+                    <div className="w-full min-h-[54px] h-[54px] rounded-xl bg-slate-100 text-slate-700 font-semibold text-base flex items-center justify-center gap-2.5">
                       <Loader2 className="w-5 h-5 animate-spin text-[#1554AD]" />
                       <span>{t.reportForm.assistantProcessing}</span>
                     </div>
                   ) : hasTranscript ? (
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="flex flex-col gap-2">
                       <button
                         type="button"
                         onClick={() => processInitialTranscript()}
-                        className="flex-1 min-h-[54px] h-[54px] rounded-2xl bg-[#1554AD] text-white font-bold text-base flex items-center justify-center gap-2 shadow-md hover:bg-[#0E3E85] active:scale-[0.99] transition-all cursor-pointer"
+                        className="w-full min-h-[54px] h-[54px] rounded-xl bg-[#1554AD] text-white font-bold text-base flex items-center justify-center gap-2 shadow-xs hover:bg-[#0E3E85] active:scale-[0.99] transition-all cursor-pointer"
                       >
                         <span>{t.reportForm.assistantUseTranscriptBtn}</span>
                         <ArrowRight className="w-4 h-4" />
@@ -1175,7 +1102,7 @@ export function GuidedVoiceAssistant({
                       <button
                         type="button"
                         onClick={() => startListening('initial')}
-                        className="min-h-[54px] h-[54px] px-4 rounded-2xl border border-slate-300 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        className="w-full min-h-[46px] h-[46px] px-4 rounded-xl border-1.5 border-slate-300 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 flex items-center justify-center gap-2 transition-all cursor-pointer"
                       >
                         <RotateCcw className="w-4 h-4 text-slate-500" />
                         <span>{t.reportForm.assistantReRecordBtn}</span>
@@ -1185,38 +1112,37 @@ export function GuidedVoiceAssistant({
                     <button
                       type="button"
                       onClick={() => startListening('initial')}
-                      className="w-full min-h-[54px] h-[54px] rounded-2xl bg-[#1554AD] text-white font-bold text-base flex items-center justify-center gap-3 shadow-md hover:bg-[#0E3E85] active:scale-[0.99] transition-all cursor-pointer"
+                      className="w-full min-h-[54px] h-[54px] rounded-xl bg-[#1554AD] text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-xs hover:bg-[#0E3E85] active:scale-[0.99] transition-all cursor-pointer"
                     >
-                      <Mic className="w-5 h-5 text-white" />
+                      <Mic className="w-5 h-5 text-white stroke-[2]" />
                       <span>{t.reportForm.assistantPressToSpeak}</span>
                     </button>
                   )}
                 </>
               )}
 
-              {/* TURN 2 (FLOOR FOLLOW-UP) CONTROLS */}
               {(turn === 'followup_floor' || turn === 'processing_floor') && (
                 <>
                   {isListening ? (
                     <button
                       type="button"
                       onClick={handleStopAndProcessFloor}
-                      className="w-full min-h-[54px] h-[54px] rounded-2xl bg-red-600 text-white font-bold text-base flex items-center justify-center gap-3 shadow-md hover:bg-red-700 active:scale-[0.99] transition-all animate-pulse cursor-pointer"
+                      className="w-full min-h-[54px] h-[54px] rounded-xl bg-[#DC2626] text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-xs hover:bg-[#B91C1C] active:scale-[0.99] transition-all cursor-pointer"
                     >
                       <Square className="w-5 h-5 fill-white text-white" />
                       <span>{t.reportForm.assistantStopSpeaking}</span>
                     </button>
                   ) : turn === 'processing_floor' ? (
-                    <div className="w-full min-h-[54px] h-[54px] rounded-2xl bg-slate-200 text-slate-700 font-semibold text-base flex items-center justify-center gap-3">
+                    <div className="w-full min-h-[54px] h-[54px] rounded-xl bg-slate-100 text-slate-700 font-semibold text-base flex items-center justify-center gap-2.5">
                       <Loader2 className="w-5 h-5 animate-spin text-[#1554AD]" />
                       <span>{t.reportForm.assistantProcessing}</span>
                     </div>
                   ) : hasTranscript ? (
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="flex flex-col gap-2">
                       <button
                         type="button"
                         onClick={() => processFloorTranscript()}
-                        className="flex-1 min-h-[54px] h-[54px] rounded-2xl bg-[#1554AD] text-white font-bold text-base flex items-center justify-center gap-2 shadow-md hover:bg-[#0E3E85] active:scale-[0.99] transition-all cursor-pointer"
+                        className="w-full min-h-[54px] h-[54px] rounded-xl bg-[#1554AD] text-white font-bold text-base flex items-center justify-center gap-2 shadow-xs hover:bg-[#0E3E85] active:scale-[0.99] transition-all cursor-pointer"
                       >
                         <span>{t.reportForm.assistantUseTranscriptBtn}</span>
                         <ArrowRight className="w-4 h-4" />
@@ -1224,7 +1150,7 @@ export function GuidedVoiceAssistant({
                       <button
                         type="button"
                         onClick={() => startListening('floor')}
-                        className="min-h-[54px] h-[54px] px-4 rounded-2xl border border-slate-300 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        className="w-full min-h-[46px] h-[46px] px-4 rounded-xl border-1.5 border-slate-300 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 flex items-center justify-center gap-2 transition-all cursor-pointer"
                       >
                         <RotateCcw className="w-4 h-4 text-slate-500" />
                         <span>{t.reportForm.assistantReRecordBtn}</span>
@@ -1234,9 +1160,9 @@ export function GuidedVoiceAssistant({
                     <button
                       type="button"
                       onClick={() => startListening('floor')}
-                      className="w-full min-h-[54px] h-[54px] rounded-2xl bg-[#1554AD] text-white font-bold text-base flex items-center justify-center gap-3 shadow-md hover:bg-[#0E3E85] active:scale-[0.99] transition-all cursor-pointer"
+                      className="w-full min-h-[54px] h-[54px] rounded-xl bg-[#1554AD] text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-xs hover:bg-[#0E3E85] active:scale-[0.99] transition-all cursor-pointer"
                     >
-                      <Mic className="w-5 h-5 text-white" />
+                      <Mic className="w-5 h-5 text-white stroke-[2]" />
                       <span>{t.reportForm.assistantTapToSpeakFloor}</span>
                     </button>
                   )}
@@ -1245,7 +1171,7 @@ export function GuidedVoiceAssistant({
             </>
           )}
 
-          {/* Switch to Manual Input Fallback Button (Always Available, preserves draft) */}
+          {/* Secondary Action: "Saya mahu taip sahaja" / "Taip sahaja" (Always Available, Preserves Draft) */}
           <button
             type="button"
             onClick={() => {
@@ -1253,10 +1179,9 @@ export function GuidedVoiceAssistant({
               handleClose();
               onSwitchToManual(textToKeep);
             }}
-            className="w-full min-h-[48px] h-[48px] rounded-xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-white active:bg-slate-100 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            className="w-full py-2 text-center text-sm font-semibold text-slate-500 hover:text-[#1554AD] min-h-[44px] flex items-center justify-center transition-colors cursor-pointer"
           >
-            <PenLine className="w-4 h-4 text-slate-500" />
-            <span>{t.reportForm.assistantSwitchManual}</span>
+            {locale === 'ms' ? 'Saya mahu taip sahaja' : 'I’d rather type'}
           </button>
         </div>
       </div>
