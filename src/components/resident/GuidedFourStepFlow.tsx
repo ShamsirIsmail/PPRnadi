@@ -914,6 +914,35 @@ export function GuidedFourStepFlow({
             </div>
           )}
 
+          {/* Hidden File Inputs */}
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                onAddImages(Array.from(e.target.files));
+                e.target.value = '';
+              }
+            }}
+          />
+          <input
+            ref={galleryInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                onAddImages(Array.from(e.target.files));
+                e.target.value = '';
+              }
+            }}
+          />
+
           {/* Safety Notice */}
           <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
