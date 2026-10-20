@@ -1,6 +1,27 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useSyncExternalStore } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import {
+  Mail,
+  Clock3,
+  ClipboardList,
+  CheckCircle2,
+  Building2,
+  ChevronDown,
+  ChevronRight,
+  Droplets,
+  Lightbulb,
+  ArrowUpDown,
+  Wrench,
+  AlertTriangle,
+  X,
+  ExternalLink,
+  ImageIcon,
+} from 'lucide-react';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
+import type { FacilityCategory, ReportStatus } from '@/types/database';
 
 let cachedMinute = typeof window !== 'undefined' ? Math.floor(Date.now() / 60000) : 0;
 const timeListeners = new Set<() => void>();
@@ -23,27 +44,6 @@ const subscribeMinute = (callback: () => void) => {
 };
 const getMinuteSnapshot = () => cachedMinute;
 const getServerMinuteSnapshot = () => 0;
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import {
-  Mail,
-  Clock3,
-  ClipboardList,
-  CheckCircle2,
-  Building2,
-  ChevronDown,
-  ChevronRight,
-  Droplets,
-  Lightbulb,
-  ArrowUpDown,
-  Wrench,
-  AlertTriangle,
-  X,
-  ExternalLink,
-  ImageIcon,
-} from 'lucide-react';
-import { useTranslation } from '@/lib/i18n/LanguageContext';
-import type { FacilityCategory, ReportStatus } from '@/types/database';
 
 export interface DashboardReportItem {
   id: string;
@@ -107,7 +107,7 @@ export function ManagementDashboardClient({
   const router = useRouter();
   const currentMinute = useSyncExternalStore(subscribeMinute, getMinuteSnapshot, getServerMinuteSnapshot);
 
-  // State
+  // States
   const [reports, setReports] = useState<DashboardReportItem[]>(initialReports);
   const [stats, setStats] = useState<DashboardStats>(initialStats);
   const [tabFilter, setTabFilter] = useState<'new' | 'active' | 'done'>('new');
@@ -117,8 +117,9 @@ export function ManagementDashboardClient({
   const [expandedReportId, setExpandedReportId] = useState<string | null>(null);
   const [showReasonText, setShowReasonText] = useState(false);
 
-  // Listen for realtime incoming report event dispatched from ManagementShell
+  // Listen for realtime events from ManagementShell
   useEffect(() => {
+    // 1. New report arrived at runtime
     const handleNewReport = (e: Event) => {
       const customEvent = e as CustomEvent<DashboardReportItem>;
       if (customEvent.detail) {
@@ -134,21 +135,52 @@ export function ManagementDashboardClient({
       }
     };
 
+    // 2. Open report detail triggered from notification "Semak aduan"
+    const handleOpenDetail = (e: Event) => {
+      const customEvent = e as CustomEvent<{ reportId: string }>;
+      if (customEvent.detail?.reportId) {
+        const targetId = customEvent.detail.reportId;
+        setTabFilter('new');
+        setExpandedReportId(targetId);
+        // Scroll to detail or target row if needed
+        setTimeout(() => {
+          const el = document.getElementById(`report-row-${targetId}`) || document.getElementById('management-report-detail');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+      }
+    };
+
     window.addEventListener('ppr_new_report_arrived', handleNewReport);
-    return () => window.removeEventListener('ppr_new_report_arrived', handleNewReport);
+    window.addEventListener('ppr_open_report_detail', handleOpenDetail);
+
+    // Also check URL hash on initial load
+    if (typeof window !== 'undefined' && window.location.hash.startsWith('#report-')) {
+      const hashId = window.location.hash.replace('#report-', '');
+      if (hashId) {
+        setTabFilter('new');
+        setExpandedReportId(hashId);
+      }
+    }
+
+    return () => {
+      window.removeEventListener('ppr_new_report_arrived', handleNewReport);
+      window.removeEventListener('ppr_open_report_detail', handleOpenDetail);
+    };
   }, []);
 
   // Category Icon Resolver
   const getCategoryIcon = (cat: FacilityCategory) => {
     switch (cat) {
       case 'water_supply':
-        return <Droplets className="w-4 h-4" aria-hidden="true" />;
+        return <Droplets className="w-[18px] h-[18px]" aria-hidden="true" />;
       case 'lift':
-        return <ArrowUpDown className="w-4 h-4" aria-hidden="true" />;
+        return <ArrowUpDown className="w-[18px] h-[18px]" aria-hidden="true" />;
       case 'corridor_lighting':
-        return <Lightbulb className="w-4 h-4" aria-hidden="true" />;
+        return <Lightbulb className="w-[18px] h-[18px]" aria-hidden="true" />;
       default:
-        return <Wrench className="w-4 h-4" aria-hidden="true" />;
+        return <Wrench className="w-[18px] h-[18px]" aria-hidden="true" />;
     }
   };
 
@@ -202,7 +234,6 @@ export function ManagementDashboardClient({
         // Block Filter
         if (selectedBlockCode) {
           const bldgCode = r.building?.code || '';
-          // Support both "DR_BLK_A" and "BLK_A"
           const normalized = bldgCode.replace('DR_', '').replace('BLK_', '');
           if (normalized !== selectedBlockCode) {
             return false;
@@ -218,10 +249,10 @@ export function ManagementDashboardClient({
       });
   }, [reports, tabFilter, selectedFacilityCategory, selectedBlockCode, sortOrder]);
 
+  const newReportsCount = reports.filter((r) => r.status === 'submitted').length;
   const activeReportsCount = reports.filter(
     (r) => r.status === 'reviewed' || r.status === 'linked'
   ).length;
-
   const resolvedReportsCount = reports.filter((r) => r.status === 'dismissed').length;
 
   // Selected report for expanded drawer
@@ -229,7 +260,7 @@ export function ManagementDashboardClient({
     return reports.find((r) => r.id === expandedReportId) || null;
   }, [reports, expandedReportId]);
 
-  // Facilities list for right rail
+  // Facilities list for right rail matching reference
   const facilityItems: Array<{
     key: FacilityCategory;
     name: string;
@@ -266,26 +297,26 @@ export function ManagementDashboardClient({
   const blockLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* ─────────────────────────────────────────────────────────────────────────────
-          1. Intro Header & Estate Context Pill
+          1. Intro Header & Estate Context Pill (.intro)
           ───────────────────────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
-          <span className="text-[10px] font-bold text-[#7f90a7] tracking-wider uppercase">
+          <span className="text-[10px] font-bold text-[#7f90a7] tracking-[0.4px] uppercase block">
             {estateName.toUpperCase()}
           </span>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#152743] tracking-tight mt-0.5">
+          <h1 className="text-[23px] font-semibold text-[#152743] leading-[1.3] tracking-[-0.5px] my-1">
             {t.management.dashboardTitle}
           </h1>
-          <p className="text-xs text-[#7b8da6] mt-0.5">
+          <p className="text-xs text-[#7b8da6] my-1">
             {t.management.dashboardSubtitle}
           </p>
         </div>
 
-        {/* Estate Pill */}
-        <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-[#e5ebf3] bg-white text-xs font-semibold text-[#152743] shadow-2xs self-start sm:self-auto">
-          <Building2 className="w-3.5 h-3.5 text-[#1965c6]" aria-hidden="true" />
+        {/* Estate Pill (.estate-pill) */}
+        <div className="inline-flex items-center gap-2 px-3 py-2 rounded-[7px] border border-[#e5ebf3] bg-white text-[11px] font-medium text-[#152743] self-start sm:self-auto shadow-2xs">
+          <Building2 className="w-4 h-4 text-[#1965c6]" aria-hidden="true" />
           <span>{estateName}</span>
         </div>
       </div>
@@ -294,7 +325,7 @@ export function ManagementDashboardClient({
           2. Error Banner (If DB Query Failed — Never silently turned into 0)
           ───────────────────────────────────────────────────────────────────────────── */}
       {stats.hasError && (
-        <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between gap-3 text-xs text-red-800">
+        <div className="p-3.5 bg-red-50 border border-red-200 rounded-[9px] flex items-center justify-between gap-3 text-xs text-red-800">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
             <span>{t.management.statsLoadError}</span>
@@ -302,7 +333,7 @@ export function ManagementDashboardClient({
           <button
             type="button"
             onClick={() => router.refresh()}
-            className="px-3 py-1 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors shrink-0"
+            className="px-3 py-1 bg-red-600 text-white rounded-[7px] font-bold hover:bg-red-700 transition-colors shrink-0"
           >
             {t.management.retryBtn}
           </button>
@@ -310,19 +341,25 @@ export function ManagementDashboardClient({
       )}
 
       {/* ─────────────────────────────────────────────────────────────────────────────
-          3. Four Statistics Metric Cards (Authoritative Real DB Data)
+          3. Four Statistics Metric Cards (.metrics)
           ───────────────────────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-4">
         {/* Metric 1: Aduan Baharu */}
-        <div data-testid="metric-card" className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl border border-[#e7edf5] bg-linear-to-br from-[#f9fbff] to-white shadow-2xs">
-          <div className="w-9 h-9 rounded-xl bg-[#eaf3ff] text-[#0969dc] flex items-center justify-center shrink-0">
-            <Mail className="w-4.5 h-4.5" aria-hidden="true" />
+        <div
+          data-testid="metric-card"
+          className="flex items-start gap-3 p-3.5 sm:p-4 rounded-[9px] border border-[#e7edf5] bg-gradient-to-br from-[#f9fbff] to-white shadow-2xs"
+        >
+          <div className="w-[35px] h-[35px] rounded-[13px] bg-[#eaf3ff] text-[#0969dc] flex items-center justify-center shrink-0">
+            <Mail className="w-[18px] h-[18px]" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <span className="text-[11px] font-medium text-slate-500 block truncate">
+            <span className="text-[11px] text-[#152743] block truncate">
               {t.management.metricNewReports}
             </span>
-            <strong className="text-2xl sm:text-[27px] font-semibold text-[#152743] leading-tight tracking-tight block my-0.5">
+            <strong
+              id="new-count"
+              className="text-[27px] sm:text-[29px] font-medium text-[#152743] leading-[1.3] tracking-[-0.7px] block my-1"
+            >
               {stats.newReportsCount}
             </strong>
             <small className="text-[10px] text-[#8797ad] flex items-center gap-1.5 truncate">
@@ -333,15 +370,18 @@ export function ManagementDashboardClient({
         </div>
 
         {/* Metric 2: Dalam Tindakan */}
-        <div data-testid="metric-card" className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl border border-[#e7edf5] bg-linear-to-br from-[#f9fbff] to-white shadow-2xs">
-          <div className="w-9 h-9 rounded-xl bg-[#fff3e0] text-[#bc780d] flex items-center justify-center shrink-0">
-            <Clock3 className="w-4.5 h-4.5" aria-hidden="true" />
+        <div
+          data-testid="metric-card"
+          className="flex items-start gap-3 p-3.5 sm:p-4 rounded-[9px] border border-[#e7edf5] bg-gradient-to-br from-[#f9fbff] to-white shadow-2xs"
+        >
+          <div className="w-[35px] h-[35px] rounded-[13px] bg-[#fff3e0] text-[#bc780d] flex items-center justify-center shrink-0">
+            <Clock3 className="w-[18px] h-[18px]" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <span className="text-[11px] font-medium text-slate-500 block truncate">
+            <span className="text-[11px] text-[#152743] block truncate">
               {t.management.metricActiveIncidents}
             </span>
-            <strong className="text-2xl sm:text-[27px] font-semibold text-[#152743] leading-tight tracking-tight block my-0.5">
+            <strong className="text-[27px] sm:text-[29px] font-medium text-[#152743] leading-[1.3] tracking-[-0.7px] block my-1">
               {stats.activeIncidentsCount}
             </strong>
             <small className="text-[10px] text-[#8797ad] flex items-center gap-1.5 truncate">
@@ -352,15 +392,18 @@ export function ManagementDashboardClient({
         </div>
 
         {/* Metric 3: Perlu Keputusan */}
-        <div data-testid="metric-card" className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl border border-[#e7edf5] bg-linear-to-br from-[#f9fbff] to-white shadow-2xs">
-          <div className="w-9 h-9 rounded-xl bg-[#fff0f1] text-[#dd4454] flex items-center justify-center shrink-0">
-            <ClipboardList className="w-4.5 h-4.5" aria-hidden="true" />
+        <div
+          data-testid="metric-card"
+          className="flex items-start gap-3 p-3.5 sm:p-4 rounded-[9px] border border-[#e7edf5] bg-gradient-to-br from-[#f9fbff] to-white shadow-2xs"
+        >
+          <div className="w-[35px] h-[35px] rounded-[13px] bg-[#fff0f1] text-[#dd4454] flex items-center justify-center shrink-0">
+            <ClipboardList className="w-[18px] h-[18px]" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <span className="text-[11px] font-medium text-slate-500 block truncate">
+            <span className="text-[11px] text-[#152743] block truncate">
               {t.management.metricPendingDecisions}
             </span>
-            <strong className="text-2xl sm:text-[27px] font-semibold text-[#152743] leading-tight tracking-tight block my-0.5">
+            <strong className="text-[27px] sm:text-[29px] font-medium text-[#152743] leading-[1.3] tracking-[-0.7px] block my-1">
               {stats.pendingDecisionsCount}
             </strong>
             <small className="text-[10px] text-[#8797ad] flex items-center gap-1.5 truncate">
@@ -371,15 +414,18 @@ export function ManagementDashboardClient({
         </div>
 
         {/* Metric 4: Selesai Bulan Ini */}
-        <div data-testid="metric-card" className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl border border-[#e7edf5] bg-linear-to-br from-[#f9fbff] to-white shadow-2xs">
-          <div className="w-9 h-9 rounded-xl bg-[#eaf7ed] text-[#22964a] flex items-center justify-center shrink-0">
-            <CheckCircle2 className="w-4.5 h-4.5" aria-hidden="true" />
+        <div
+          data-testid="metric-card"
+          className="flex items-start gap-3 p-3.5 sm:p-4 rounded-[9px] border border-[#e7edf5] bg-gradient-to-br from-[#f9fbff] to-white shadow-2xs"
+        >
+          <div className="w-[35px] h-[35px] rounded-[13px] bg-[#eaf7ed] text-[#22964a] flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-[18px] h-[18px]" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <span className="text-[11px] font-medium text-slate-500 block truncate">
+            <span className="text-[11px] text-[#152743] block truncate">
               {t.management.metricResolvedMonth}
             </span>
-            <strong className="text-2xl sm:text-[27px] font-semibold text-[#152743] leading-tight tracking-tight block my-0.5">
+            <strong className="text-[27px] sm:text-[29px] font-medium text-[#152743] leading-[1.3] tracking-[-0.7px] block my-1">
               {stats.resolvedThisMonthCount}
             </strong>
             <small className="text-[10px] text-[#8797ad] flex items-center gap-1.5 truncate">
@@ -391,31 +437,36 @@ export function ManagementDashboardClient({
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────────────────
-          4. Workspace: Left Main Panel (Reports & Decision) + Right Rail
+          4. Workspace (.workspace: Left Main Panel + Right Rail)
           ───────────────────────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_250px] gap-3.5">
-        {/* ── Left Main Panel: Reports List & Management Decision ── */}
-        <section className="border border-[#e6ecf4] rounded-xl bg-white overflow-hidden shadow-2xs flex flex-col justify-between">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_235px] gap-3">
+        {/* ── Left Main Panel (.panel) ── */}
+        <section className="border border-[#e6ecf4] rounded-[9px] bg-white overflow-hidden shadow-2xs flex flex-col justify-between">
           <div>
-            {/* Panel Head */}
-            <div className="p-4 flex items-center justify-between gap-3 border-b border-slate-100">
-              <h2 className="text-sm font-bold text-[#152743]">
+            {/* Panel Head (.panel-head) */}
+            <div className="p-4 flex items-center justify-between gap-3 border-b border-[#edf0f5]">
+              <h2 className="text-sm font-semibold text-[#152743] m-0">
                 {t.management.reportsToReview}
               </h2>
 
-              {/* Sort button */}
+              {/* Sort Button (.sort) */}
               <button
                 type="button"
+                id="sort"
                 onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#e3e9f1] hover:bg-[#f1f6fd] text-xs font-medium text-slate-600 transition-colors"
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-[7px] border border-[#e3e9f1] hover:bg-[#f1f6fd] text-[10px] font-medium text-slate-600 transition-colors min-h-[30px]"
               >
                 <span>{sortOrder === 'newest' ? t.management.sortNewest : t.management.sortOldest}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronDown className="w-3 h-3 text-slate-400" />
               </button>
             </div>
 
-            {/* Filter Tabs */}
-            <div role="tablist" aria-label="Penapis status aduan" className="flex items-center gap-3 px-4 pt-2 border-b border-[#e8eef5] text-xs font-medium">
+            {/* Filter Tabs (.tabs) */}
+            <div
+              role="tablist"
+              aria-label="Penapis status aduan"
+              className="flex items-center gap-3 px-4 pt-2 border-b border-[#e8eef5] text-[11px]"
+            >
               <button
                 type="button"
                 role="tab"
@@ -423,13 +474,16 @@ export function ManagementDashboardClient({
                 onClick={() => setTabFilter('new')}
                 className={`pb-2.5 px-1 border-b-2 transition-all ${
                   tabFilter === 'new'
-                    ? 'border-[#2377eb] text-[#0d61c7] font-bold'
+                    ? 'border-[#2377eb] text-[#0d61c7] font-semibold'
                     : 'border-transparent text-[#8190a5] hover:text-[#152743]'
                 }`}
               >
                 {t.management.tabNew}
-                <span className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#deebff] text-[#185bb5]">
-                  {stats.newReportsCount}
+                <span
+                  id="tab-count"
+                  className="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#deebff] text-[#185bb5]"
+                >
+                  {newReportsCount}
                 </span>
               </button>
 
@@ -440,12 +494,12 @@ export function ManagementDashboardClient({
                 onClick={() => setTabFilter('active')}
                 className={`pb-2.5 px-1 border-b-2 transition-all ${
                   tabFilter === 'active'
-                    ? 'border-[#2377eb] text-[#0d61c7] font-bold'
+                    ? 'border-[#2377eb] text-[#0d61c7] font-semibold'
                     : 'border-transparent text-[#8190a5] hover:text-[#152743]'
                 }`}
               >
                 {t.management.tabActive}
-                <span className="ml-1 text-[10px] font-semibold text-slate-400">
+                <span className="ml-1 text-[10px] font-medium text-slate-400">
                   ({activeReportsCount})
                 </span>
               </button>
@@ -457,12 +511,12 @@ export function ManagementDashboardClient({
                 onClick={() => setTabFilter('done')}
                 className={`pb-2.5 px-1 border-b-2 transition-all ${
                   tabFilter === 'done'
-                    ? 'border-[#2377eb] text-[#0d61c7] font-bold'
+                    ? 'border-[#2377eb] text-[#0d61c7] font-semibold'
                     : 'border-transparent text-[#8190a5] hover:text-[#152743]'
                 }`}
               >
                 {t.management.tabDone}
-                <span className="ml-1 text-[10px] font-semibold text-slate-400">
+                <span className="ml-1 text-[10px] font-medium text-slate-400">
                   ({resolvedReportsCount})
                 </span>
               </button>
@@ -471,7 +525,7 @@ export function ManagementDashboardClient({
             {/* Active Rail Filter Chips (Facility or Block) */}
             {(selectedFacilityCategory || selectedBlockCode) && (
               <div className="px-4 py-2 bg-blue-50/50 border-b border-blue-100 flex items-center justify-between text-xs">
-                <span className="text-[#1554AD] font-medium flex items-center gap-1.5">
+                <span className="text-[#1554AD] font-medium flex items-center gap-1.5 text-[11px]">
                   <span>Ditapis:</span>
                   {selectedFacilityCategory && (
                     <strong className="font-bold underline">
@@ -489,7 +543,7 @@ export function ManagementDashboardClient({
                     setSelectedFacilityCategory(null);
                     setSelectedBlockCode(null);
                   }}
-                  className="text-xs font-semibold text-slate-500 hover:text-red-600 flex items-center gap-1"
+                  className="text-[11px] font-semibold text-slate-500 hover:text-red-600 flex items-center gap-1"
                 >
                   <X className="w-3.5 h-3.5" />
                   <span>Kosongkan penapis</span>
@@ -497,14 +551,14 @@ export function ManagementDashboardClient({
               </div>
             )}
 
-            {/* Reports List */}
-            {filteredReports.length === 0 ? (
-              <div className="p-8 text-center text-xs text-slate-400 italic">
-                {t.management.noReportsInTab}
-              </div>
-            ) : (
-              <div className="divide-y divide-[#edf1f6]">
-                {filteredReports.map((report) => {
+            {/* Reports List (#rows) */}
+            <div id="rows" className="divide-y divide-[#edf1f6]">
+              {filteredReports.length === 0 ? (
+                <div className="p-8 text-center text-xs text-slate-400 italic">
+                  {t.management.noReportsInTab}
+                </div>
+              ) : (
+                filteredReports.map((report) => {
                   const bldgName = report.building?.name || 'Blok';
                   const zoneName = report.zone?.name ? ` · ${report.zone.name}` : '';
                   const locationText = `${bldgName}${zoneName}`;
@@ -516,28 +570,29 @@ export function ManagementDashboardClient({
                   return (
                     <div
                       key={report.id}
-                      className="p-4 hover:bg-[#fafcff] transition-colors grid grid-cols-[36px_1fr_auto_32px] sm:grid-cols-[36px_minmax(0,1.2fr)_minmax(0,1fr)_32px] gap-3 items-center"
+                      id={`report-row-${report.id}`}
+                      className="p-4 sm:px-4 sm:py-5 hover:bg-[#fafcff] transition-colors grid grid-cols-[36px_1fr_auto_30px] sm:grid-cols-[36px_minmax(0,1.2fr)_minmax(80px,0.8fr)_30px] gap-3 items-center"
                     >
-                      {/* Category Icon Tile */}
-                      <div className="w-[35px] h-[36px] rounded-xl bg-[#edf5ff] text-[#2374ce] flex items-center justify-center shrink-0">
+                      {/* Category Icon (.category: 35px x 38px, rounded 12px) */}
+                      <div className="w-[35px] h-[38px] rounded-[12px] bg-[#edf5ff] text-[#2374ce] flex items-center justify-center shrink-0">
                         {getCategoryIcon(report.category)}
                       </div>
 
                       {/* Main Title, Location, and Status Pill */}
                       <div className="min-w-0 pr-1">
                         <div className="flex items-center gap-2">
-                          <strong className="text-xs font-bold text-[#152743] truncate block">
+                          <b className="text-xs font-semibold text-[#152743] truncate block">
                             {categoryName}
-                          </strong>
+                          </b>
                           <span className="font-mono text-[10px] text-slate-400 hidden sm:inline">
                             {displayRef}
                           </span>
                         </div>
-                        <p className="text-[11px] text-[#7b8da6] mt-0.5 truncate">
+                        <p className="text-[10px] text-[#7b8da6] leading-[1.7] mt-0.5 truncate">
                           {locationText} · {formatTime(report.created_at)}
                         </p>
                         <span
-                          className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold mt-1.5 ${
+                          className={`inline-block px-1.5 py-0.5 rounded-[4px] text-[10px] mt-1 ${
                             report.status === 'submitted'
                               ? 'bg-[#fff2df] text-[#a16f29]'
                               : report.status === 'linked'
@@ -553,9 +608,9 @@ export function ManagementDashboardClient({
                         </span>
                       </div>
 
-                      {/* Snippet Description & Thumbnail */}
+                      {/* Snippet Description & Thumbnail (.snippet) */}
                       <div className="hidden sm:flex items-center gap-2.5 min-w-0">
-                        <p className="text-xs text-[#8090a7] line-clamp-2 leading-relaxed flex-1">
+                        <p className="text-[11px] text-[#8090a7] line-clamp-2 leading-relaxed flex-1">
                           {report.description}
                         </p>
                         {firstPhoto?.signedUrl && (
@@ -577,8 +632,8 @@ export function ManagementDashboardClient({
                             expandedReportId === report.id ? null : report.id
                           )
                         }
-                        aria-label={`Lihat butiran aduan ${displayRef}`}
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center text-[#6a87ac] hover:bg-[#edf4ff] hover:text-[#1965c6] transition-all ${
+                        aria-label={`Lihat ${categoryName}`}
+                        className={`w-[30px] min-h-[36px] rounded-lg flex items-center justify-center text-[#6a87ac] hover:bg-[#edf4ff] hover:text-[#1965c6] transition-all ${
                           expandedReportId === report.id ? 'bg-[#edf4ff] text-[#1965c6]' : ''
                         }`}
                       >
@@ -590,27 +645,28 @@ export function ManagementDashboardClient({
                       </button>
                     </div>
                   );
-                })}
-              </div>
-            )}
+                })
+              )}
+            </div>
 
             {/* Inline Detail Drawer (#detail in preview) */}
             {expandedReport && (
               <div
-                id="management-report-detail"
-                className="p-4 sm:p-5 bg-[#f8fbff] border-t border-[#e4ecf6] space-y-3"
+                id="detail"
+                className="p-4 sm:p-4.5 bg-[#f8fbff] border-t border-[#e4ecf6] space-y-2.5"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-[#152743]">
+                    <h3 className="text-xs font-bold text-[#152743]">
                       {t.categories[expandedReport.category] || expandedReport.category}
                     </h3>
-                    <span className="font-mono text-xs font-bold text-[#1554AD]">
+                    <span className="font-mono text-[11px] font-bold text-[#1554AD]">
                       #LPR-{expandedReport.id.substring(0, 8).toUpperCase()}
                     </span>
                   </div>
                   <button
                     type="button"
+                    id="close-detail"
                     onClick={() => setExpandedReportId(null)}
                     className="text-xs font-semibold text-slate-400 hover:text-slate-600"
                   >
@@ -665,10 +721,10 @@ export function ManagementDashboardClient({
                 )}
 
                 {/* Direct Action Link to Inbox */}
-                <div className="pt-2">
+                <div className="pt-1">
                   <Link
                     href={`/management/inbox#report-${expandedReport.id}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1965c6] text-white text-xs font-bold hover:bg-[#1359af] transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[7px] bg-[#1965c6] text-white text-xs font-semibold hover:bg-[#1359af] transition-colors"
                   >
                     <span>Urus di Peti Aduan →</span>
                   </Link>
@@ -677,15 +733,15 @@ export function ManagementDashboardClient({
             )}
           </div>
 
-          {/* ── Bottom Section: Keputusan Pengurus (Authoritative Evaluated Priority) ── */}
-          <div className="p-4 border-t border-[#e8eef6] bg-[#fafcff] space-y-2">
-            <h2 className="text-xs font-bold text-[#152743]">
+          {/* ── Bottom Section: Keputusan Pengurus (.decision) ── */}
+          <div className="p-3.5 sm:p-4 border-t border-[#e8eef6] bg-[#fafcff] space-y-2">
+            <h2 className="text-xs font-semibold text-[#152743]">
               {t.management.managerDecisionsTitle}
             </h2>
 
             {unconfirmedEvaluation ? (
               <div className="space-y-1.5">
-                <p className="text-xs text-slate-600 leading-relaxed">
+                <p className="text-[11px] text-slate-600 leading-[1.7]">
                   <strong>{unconfirmedEvaluation.reportRef} ({unconfirmedEvaluation.category}):</strong> Dicadangkan keutamaan{' '}
                   <span className="font-bold text-[#dd4454] uppercase">
                     {unconfirmedEvaluation.recommendedPriority.replace('_', ' ')}
@@ -700,8 +756,9 @@ export function ManagementDashboardClient({
 
                   <button
                     type="button"
+                    id="reason"
                     onClick={() => setShowReasonText(!showReasonText)}
-                    className="text-xs text-[#1766c0] font-semibold hover:underline"
+                    className="text-[11px] text-[#1766c0] font-semibold hover:underline"
                   >
                     {showReasonText
                       ? t.management.closeReasonBtn
@@ -710,7 +767,10 @@ export function ManagementDashboardClient({
                 </div>
 
                 {showReasonText && (
-                  <p className="text-[11px] text-slate-500 bg-white p-2.5 rounded-lg border border-slate-200 mt-1 leading-relaxed">
+                  <p
+                    id="reason-text"
+                    className="text-[11px] text-slate-500 bg-white p-2.5 rounded-lg border border-slate-200 mt-1 leading-relaxed"
+                  >
                     {unconfirmedEvaluation.factsSummary ||
                       'Penilaian peraturan deterministik mengesan impak fasiliti kritikal. Keutamaan muktamad memerlukan pengesahan pengurus.'}
                   </p>
@@ -719,7 +779,7 @@ export function ManagementDashboardClient({
                 <div className="pt-1">
                   <Link
                     href="/management/inbox"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#1965c6] hover:underline"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#1965c6] hover:underline"
                   >
                     <span>{t.management.openInboxTriageBtn}</span>
                   </Link>
@@ -733,20 +793,20 @@ export function ManagementDashboardClient({
           </div>
         </section>
 
-        {/* ── Right Rail: Fasiliti PPR + Ringkasan Blok ── */}
-        <div className="space-y-3.5">
+        {/* ── Right Rail (.rail: 235px) ── */}
+        <div className="flex flex-col gap-3">
           {/* Panel 1: Fasiliti PPR */}
-          <section className="border border-[#e6ecf4] rounded-xl bg-white overflow-hidden shadow-2xs">
-            <div className="p-3 sm:p-3.5 border-b border-slate-100 flex items-center justify-between">
-              <h2 className="text-xs font-bold text-[#152743]">
+          <section className="border border-[#e6ecf4] rounded-[9px] bg-white overflow-hidden shadow-2xs">
+            <div className="p-3 border-b border-[#edf0f5] flex items-center justify-between">
+              <h2 className="text-xs font-semibold text-[#152743]">
                 {t.management.facilitiesTitle}
               </h2>
-              <span className="text-[9px] font-bold text-[#7f90a7] tracking-wider uppercase">
+              <span className="text-[10px] font-bold text-[#7f90a7] tracking-wider uppercase">
                 {t.management.activeReportsEyebrow}
               </span>
             </div>
 
-            <div className="p-3 grid grid-cols-2 gap-2">
+            <div id="facilities" className="p-3 grid grid-cols-2 gap-2">
               {facilityItems.map((fac) => (
                 <button
                   key={fac.key}
@@ -756,15 +816,19 @@ export function ManagementDashboardClient({
                       selectedFacilityCategory === fac.key ? null : fac.key
                     )
                   }
-                  className={`p-2.5 rounded-lg border text-left transition-all flex flex-col items-center justify-center text-center gap-1 min-h-[58px] ${
+                  className={`p-2 rounded-[7px] border text-left transition-all flex flex-col items-center justify-center text-center gap-1 min-h-[58px] ${
                     selectedFacilityCategory === fac.key
                       ? 'bg-[#e5efff] border-[#a6c8f7] text-[#185bb5]'
                       : 'bg-[#f6f8fb] border-[#edf1f5] text-slate-700 hover:bg-[#edf4ff]'
                   }`}
                 >
-                  <span className="text-[#2769b7]">{fac.icon}</span>
-                  <span className="text-[11px] font-bold leading-tight line-clamp-1">{fac.name}</span>
-                  <small className="text-[10px] text-slate-500">
+                  <span className="w-full h-8 rounded-[6px] bg-[#f3f7fc] text-[#2769b7] flex items-center justify-center">
+                    {fac.icon}
+                  </span>
+                  <span className="text-[10px] font-bold leading-tight line-clamp-1">
+                    {fac.name}
+                  </span>
+                  <small className="text-[10px] text-[#8b9bb0]">
                     {fac.count} {t.management.aduanCountSuffix}
                   </small>
                 </button>
@@ -773,16 +837,16 @@ export function ManagementDashboardClient({
           </section>
 
           {/* Panel 2: Ringkasan Blok (A-L) */}
-          <section className="border border-[#e6ecf4] rounded-xl bg-white overflow-hidden shadow-2xs">
-            <div className="p-3 sm:p-3.5 border-b border-slate-100 flex items-center justify-between">
-              <h2 className="text-xs font-bold text-[#152743]">
+          <section className="border border-[#e6ecf4] rounded-[9px] bg-white overflow-hidden shadow-2xs">
+            <div className="p-3 border-b border-[#edf0f5] flex items-center justify-between">
+              <h2 className="text-xs font-semibold text-[#152743]">
                 {t.management.blockSummaryTitle}
               </h2>
               <Building2 className="w-3.5 h-3.5 text-slate-400" />
             </div>
 
             <div className="p-3">
-              <div className="grid grid-cols-4 gap-1.5">
+              <div id="blocks" className="grid grid-cols-4 gap-1.5">
                 {blockLetters.map((b) => (
                   <button
                     key={b}
@@ -790,9 +854,9 @@ export function ManagementDashboardClient({
                     onClick={() =>
                       setSelectedBlockCode(selectedBlockCode === b ? null : b)
                     }
-                    className={`h-8 rounded-lg border text-xs font-bold transition-all flex items-center justify-center ${
+                    className={`min-h-[34px] p-1 rounded-[7px] border text-[11px] font-bold transition-all flex items-center justify-center ${
                       selectedBlockCode === b
-                        ? 'bg-[#e5efff] text-[#185bb5] border-[#a6c8f7] shadow-xs'
+                        ? 'bg-[#e5efff] text-[#185bb5] border-[#a6c8f7]'
                         : 'bg-[#f6f8fb] border-[#edf1f5] text-slate-700 hover:bg-[#edf4ff]'
                     }`}
                   >
@@ -801,7 +865,7 @@ export function ManagementDashboardClient({
                 ))}
               </div>
 
-              <p className="text-[10px] text-slate-500 mt-2.5 leading-relaxed">
+              <p id="block-note" className="text-[10px] text-[#8795a8] mt-2.5 leading-relaxed">
                 {selectedBlockCode
                   ? (activeBlockCounts[selectedBlockCode] || 0) > 0
                     ? `Blok ${selectedBlockCode} · ${activeBlockCounts[selectedBlockCode]} ${t.management.blockActiveSummary}`

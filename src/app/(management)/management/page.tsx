@@ -12,6 +12,21 @@ import type { FacilityCategory, ReportStatus } from '@/types/database';
 
 export const instant = false;
 
+/**
+ * Returns ISO string for the start of the current month in Asia/Kuala_Lumpur (UTC+8).
+ * Example: for October 2026, returns '2026-10-01T00:00:00+08:00'.
+ */
+function getStartOfMonthInKL(): string {
+  const now = new Date();
+  const klFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kuala_Lumpur',
+    year: 'numeric',
+    month: '2-digit',
+  });
+  const [year, month] = klFormatter.format(now).split('-');
+  return `${year}-${month}-01T00:00:00+08:00`;
+}
+
 export default async function ManagementDashboardPage() {
   const { profile } = await requireManager();
   const supabase = await createServerSupabaseClient();
@@ -27,7 +42,7 @@ export default async function ManagementDashboardPage() {
 
   // 1. Fetch 4 Statistics with authoritative DB queries
   try {
-    // 1A. Aduan Baharu
+    // 1A. Aduan Baharu (Resident reports awaiting initial manager review)
     const { count: newCount, error: newErr } = await supabase
       .from('incident_reports')
       .select('id, buildings!inner(estate_id)', { count: 'exact', head: true })
@@ -36,7 +51,7 @@ export default async function ManagementDashboardPage() {
     if (newErr) throw newErr;
     newReportsCount = newCount || 0;
 
-    // 1B. Insiden Dalam Tindakan
+    // 1B. Insiden Dalam Tindakan (Estate-level operational incidents being investigated/repaired)
     const { count: actCount, error: actErr } = await supabase
       .from('incidents')
       .select('id, buildings!inner(estate_id)', { count: 'exact', head: true })
@@ -45,7 +60,7 @@ export default async function ManagementDashboardPage() {
     if (actErr) throw actErr;
     activeIncidentsCount = actCount || 0;
 
-    // 1C. Cadangan Perlu Keputusan
+    // 1C. Cadangan Perlu Keputusan (Deterministic priority evaluations pending human manager decision)
     const { data: evals, error: evalErr } = await supabase
       .from('report_priority_evaluations')
       .select('id, report_id, incident_reports!inner(buildings!inner(estate_id))')
@@ -61,15 +76,14 @@ export default async function ManagementDashboardPage() {
     const pendingEvals = (evals || []).filter((e) => !decidedSet.has(e.report_id));
     pendingDecisionsCount = pendingEvals.length;
 
-    // 1D. Insiden Selesai Bulan Ini
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    // 1D. Insiden Selesai Bulan Ini (Restored/closed incidents within current month in Asia/Kuala_Lumpur)
+    const startOfMonthKL = getStartOfMonthInKL();
     const { count: resCount, error: resErr } = await supabase
       .from('incidents')
       .select('id, buildings!inner(estate_id)', { count: 'exact', head: true })
       .eq('buildings.estate_id', estateId)
       .in('status', ['restored', 'closed'])
-      .gte('updated_at', startOfMonth);
+      .gte('updated_at', startOfMonthKL);
     if (resErr) throw resErr;
     resolvedThisMonthCount = resCount || 0;
   } catch (err) {
@@ -113,7 +127,7 @@ export default async function ManagementDashboardPage() {
 
     if (repError) throw repError;
 
-    // Sign URLs for attachments
+    // Securely generate signed URLs on server side (zero service role in browser)
     let adminSupabase: ReturnType<typeof createAdminClient> | null = null;
     const serviceRoleKey =
       process.env.SUPABASE_SERVICE_ROLE_KEY ||
