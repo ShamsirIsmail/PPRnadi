@@ -253,14 +253,14 @@ async function runVerification() {
     await managerPage.waitForTimeout(400);
 
     const enHeading = await managerPage.locator('h1').innerText();
-    assert.ok(enHeading.includes('Operations'), 'Header in English must include Operations');
+    assert.ok(enHeading.includes('Management Summary'), 'Header in English must include Management Summary');
     console.log('✓ Language switched to English:', enHeading);
 
     // Switch back to BM
     await langBtn.click();
     await managerPage.waitForTimeout(400);
     const bmHeading = await managerPage.locator('h1').innerText();
-    assert.ok(bmHeading.includes('Operasi'), 'Header in BM must include Operasi');
+    assert.ok(bmHeading.includes('Ringkasan pengurusan'), 'Header in BM must include Ringkasan pengurusan');
     console.log('✓ Language switched back to Bahasa Melayu:', bmHeading);
 
     // Responsive Viewports

@@ -415,9 +415,11 @@ export function ManagementDashboardClient({
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex items-center gap-3 px-4 pt-2 border-b border-[#e8eef5] text-xs font-medium">
+            <div role="tablist" aria-label="Penapis status aduan" className="flex items-center gap-3 px-4 pt-2 border-b border-[#e8eef5] text-xs font-medium">
               <button
                 type="button"
+                role="tab"
+                aria-selected={tabFilter === 'new'}
                 onClick={() => setTabFilter('new')}
                 className={`pb-2.5 px-1 border-b-2 transition-all ${
                   tabFilter === 'new'
@@ -433,6 +435,8 @@ export function ManagementDashboardClient({
 
               <button
                 type="button"
+                role="tab"
+                aria-selected={tabFilter === 'active'}
                 onClick={() => setTabFilter('active')}
                 className={`pb-2.5 px-1 border-b-2 transition-all ${
                   tabFilter === 'active'
@@ -448,6 +452,8 @@ export function ManagementDashboardClient({
 
               <button
                 type="button"
+                role="tab"
+                aria-selected={tabFilter === 'done'}
                 onClick={() => setTabFilter('done')}
                 className={`pb-2.5 px-1 border-b-2 transition-all ${
                   tabFilter === 'done'
