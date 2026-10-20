@@ -2,12 +2,27 @@
 
 import React, { useState, useEffect, useMemo, useSyncExternalStore } from 'react';
 
-const subscribeTime = (callback: () => void) => {
-  const id = setInterval(callback, 30000);
-  return () => clearInterval(id);
+let cachedMinute = typeof window !== 'undefined' ? Math.floor(Date.now() / 60000) : 0;
+const timeListeners = new Set<() => void>();
+
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    const next = Math.floor(Date.now() / 60000);
+    if (next !== cachedMinute) {
+      cachedMinute = next;
+      timeListeners.forEach((fn) => fn());
+    }
+  }, 10000);
+}
+
+const subscribeMinute = (callback: () => void) => {
+  timeListeners.add(callback);
+  return () => {
+    timeListeners.delete(callback);
+  };
 };
-const getTimeSnapshot = () => Date.now();
-const getServerTimeSnapshot = () => 0;
+const getMinuteSnapshot = () => cachedMinute;
+const getServerMinuteSnapshot = () => 0;
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -90,7 +105,7 @@ export function ManagementDashboardClient({
 }: ManagementDashboardClientProps) {
   const { t, locale } = useTranslation();
   const router = useRouter();
-  const currentTime = useSyncExternalStore(subscribeTime, getTimeSnapshot, getServerTimeSnapshot);
+  const currentMinute = useSyncExternalStore(subscribeMinute, getMinuteSnapshot, getServerMinuteSnapshot);
 
   // State
   const [reports, setReports] = useState<DashboardReportItem[]>(initialReports);
@@ -141,13 +156,14 @@ export function ManagementDashboardClient({
   const formatTime = (isoString: string) => {
     try {
       const d = new Date(isoString);
-      if (currentTime === 0) {
+      if (currentMinute === 0) {
         return d.toLocaleDateString(locale === 'ms' ? 'ms-MY' : 'en-MY', {
           day: 'numeric',
           month: 'short',
         });
       }
-      const diffMs = Math.max(0, currentTime - d.getTime());
+      const nowMs = currentMinute * 60000;
+      const diffMs = Math.max(0, nowMs - d.getTime());
       const diffMins = Math.floor(diffMs / 60000);
       const diffHours = Math.floor(diffMins / 60);
       const diffDays = Math.floor(diffHours / 24);
@@ -298,7 +314,7 @@ export function ManagementDashboardClient({
           ───────────────────────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         {/* Metric 1: Aduan Baharu */}
-        <div className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl border border-[#e7edf5] bg-linear-to-br from-[#f9fbff] to-white shadow-2xs">
+        <div data-testid="metric-card" className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl border border-[#e7edf5] bg-linear-to-br from-[#f9fbff] to-white shadow-2xs">
           <div className="w-9 h-9 rounded-xl bg-[#eaf3ff] text-[#0969dc] flex items-center justify-center shrink-0">
             <Mail className="w-4.5 h-4.5" aria-hidden="true" />
           </div>
@@ -317,7 +333,7 @@ export function ManagementDashboardClient({
         </div>
 
         {/* Metric 2: Dalam Tindakan */}
-        <div className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl border border-[#e7edf5] bg-linear-to-br from-[#f9fbff] to-white shadow-2xs">
+        <div data-testid="metric-card" className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl border border-[#e7edf5] bg-linear-to-br from-[#f9fbff] to-white shadow-2xs">
           <div className="w-9 h-9 rounded-xl bg-[#fff3e0] text-[#bc780d] flex items-center justify-center shrink-0">
             <Clock3 className="w-4.5 h-4.5" aria-hidden="true" />
           </div>
@@ -336,7 +352,7 @@ export function ManagementDashboardClient({
         </div>
 
         {/* Metric 3: Perlu Keputusan */}
-        <div className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl border border-[#e7edf5] bg-linear-to-br from-[#f9fbff] to-white shadow-2xs">
+        <div data-testid="metric-card" className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl border border-[#e7edf5] bg-linear-to-br from-[#f9fbff] to-white shadow-2xs">
           <div className="w-9 h-9 rounded-xl bg-[#fff0f1] text-[#dd4454] flex items-center justify-center shrink-0">
             <ClipboardList className="w-4.5 h-4.5" aria-hidden="true" />
           </div>
@@ -355,7 +371,7 @@ export function ManagementDashboardClient({
         </div>
 
         {/* Metric 4: Selesai Bulan Ini */}
-        <div className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl border border-[#e7edf5] bg-linear-to-br from-[#f9fbff] to-white shadow-2xs">
+        <div data-testid="metric-card" className="flex items-start gap-3 p-3.5 sm:p-4 rounded-xl border border-[#e7edf5] bg-linear-to-br from-[#f9fbff] to-white shadow-2xs">
           <div className="w-9 h-9 rounded-xl bg-[#eaf7ed] text-[#22964a] flex items-center justify-center shrink-0">
             <CheckCircle2 className="w-4.5 h-4.5" aria-hidden="true" />
           </div>
