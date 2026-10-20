@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 
 export interface LoginActionResult {
   error?: string;
+  code?: string;
   success?: boolean;
 }
 
@@ -104,6 +105,7 @@ export async function demoLoginAction(role: DemoRole): Promise<LoginActionResult
       error:
         rateLimitResult.message ||
         'Had percubaan log masuk demo dicapai. Sila tunggu sebentar sebelum mencuba lagi.',
+      code: rateLimitResult.code || 'DEMO_RATE_LIMITED',
     };
   }
 

@@ -185,6 +185,8 @@ describe('demoLoginAction security, concurrency, and rate limiting', () => {
 
     const sixthAttempt = await demoLoginAction('resident');
     expect(sixthAttempt.error).toContain('Had percubaan log masuk demo dicapai');
+    expect(sixthAttempt.code).toBe('DEMO_RATE_LIMITED');
+    expect(sixthAttempt.code).not.toBe('DEMO_LIMITER_UNAVAILABLE');
   });
 
   // 5. Window tamat -> percubaan dibenarkan semula
@@ -295,6 +297,8 @@ describe('demoLoginAction security, concurrency, and rate limiting', () => {
 
     const result = await demoLoginAction('resident');
     expect(result.error).toContain('Sistem log masuk demo tidak dapat memproses');
+    expect(result.code).toBe('DEMO_LIMITER_UNAVAILABLE');
+    expect(result.code).not.toBe('DEMO_RATE_LIMITED');
   });
 
   // 11. Login biasa tidak melalui limiter demo

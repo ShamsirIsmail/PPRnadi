@@ -139,8 +139,8 @@ describe('Demo Rate Limiter — Defensive Cookie & IP Hashing Suite', () => {
     });
   });
 
-  describe('Storage Failure Handling', () => {
-    it('gracefully rejects demo login with a friendly message when server storage fails', async () => {
+  describe('Storage Failure Handling & Code Discrimination', () => {
+    it('gracefully rejects demo login and yields DEMO_LIMITER_UNAVAILABLE when server storage fails', async () => {
       const failingStorage: RateLimiterStorage = {
         checkAndIncrement: vi.fn().mockRejectedValue(new Error('Connection terminated unexpectedly')),
       };
@@ -148,7 +148,26 @@ describe('Demo Rate Limiter — Defensive Cookie & IP Hashing Suite', () => {
 
       const result = await checkDemoRateLimit();
       expect(result.allowed).toBe(false);
+      expect(result.code).toBe('DEMO_LIMITER_UNAVAILABLE');
+      expect(result.code).not.toBe('DEMO_RATE_LIMITED');
       expect(result.message).toContain('Sistem log masuk demo tidak dapat memproses');
+    });
+
+    it('returns DEMO_RATE_LIMITED (not DEMO_LIMITER_UNAVAILABLE) when quota threshold is reached', async () => {
+      const quotaExceededStorage: RateLimiterStorage = {
+        checkAndIncrement: vi.fn().mockResolvedValue({
+          allowed: false,
+          attempts: 6,
+          retryAfterSeconds: 30,
+        }),
+      };
+      setTestRateLimiterStorage(quotaExceededStorage);
+
+      const result = await checkDemoRateLimit();
+      expect(result.allowed).toBe(false);
+      expect(result.code).toBe('DEMO_RATE_LIMITED');
+      expect(result.code).not.toBe('DEMO_LIMITER_UNAVAILABLE');
+      expect(result.message).toContain('Had percubaan log masuk demo dicapai');
     });
   });
 });

@@ -29,17 +29,20 @@ export default function LoginForm({ isDemoEnabled }: LoginFormProps) {
   const [isDemoPending, startDemoTransition] = useTransition();
   const [activeDemoRole, setActiveDemoRole] = useState<DemoRole | null>(null);
   const [demoError, setDemoError] = useState<string | null>(null);
+  const [demoErrorCode, setDemoErrorCode] = useState<string | null>(null);
 
   const handleDemoLogin = (role: DemoRole) => {
     if (isDemoPending || isPending) return;
     setActiveDemoRole(role);
     setDemoError(null);
+    setDemoErrorCode(null);
 
     startDemoTransition(async () => {
       try {
         const result = await demoLoginAction(role);
         if (result?.error) {
           setDemoError(result.error);
+          setDemoErrorCode(result.code || null);
           setActiveDemoRole(null);
         }
       } catch (err: unknown) {
@@ -51,6 +54,7 @@ export default function LoginForm({ isDemoEnabled }: LoginFormProps) {
             ? 'Ralat pelayan semasa log masuk demo. Sila cuba lagi.'
             : 'Server error during demo login. Please try again.'
         );
+        setDemoErrorCode('SERVER_ERROR');
         setActiveDemoRole(null);
       }
     });
@@ -347,6 +351,9 @@ export default function LoginForm({ isDemoEnabled }: LoginFormProps) {
                 {demoError && (
                   <div
                     role="alert"
+                    id="demo-error-alert"
+                    data-testid="demo-error-alert"
+                    data-error-code={demoErrorCode || undefined}
                     className="mb-3 p-3 rounded-xl bg-[#fef2f2] border border-[#dc2626] text-xs text-[#991b1b] flex items-start gap-2 animate-in fade-in duration-200"
                   >
                     <AlertCircle className="w-4 h-4 shrink-0 text-[#dc2626] mt-0.5" />

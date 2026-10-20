@@ -6,8 +6,11 @@ export const RATE_LIMIT_COOKIE = 'ppr_demo_rl';
 export const WINDOW_SECONDS = 60;
 export const MAX_ATTEMPTS = 5;
 
+export type RateLimitErrorCode = 'DEMO_RATE_LIMITED' | 'DEMO_LIMITER_UNAVAILABLE';
+
 export interface RateLimitCheckResult {
   allowed: boolean;
+  code?: RateLimitErrorCode;
   message?: string;
   retryAfterSeconds?: number;
   attempts?: number;
@@ -268,6 +271,7 @@ export async function checkDemoRateLimit(): Promise<RateLimitCheckResult> {
     if (!result.allowed) {
       return {
         allowed: false,
+        code: 'DEMO_RATE_LIMITED',
         attempts: result.attempts,
         retryAfterSeconds: result.retryAfterSeconds,
         message: 'Had percubaan log masuk demo dicapai. Sila tunggu sebentar sebelum mencuba lagi.',
@@ -287,6 +291,7 @@ export async function checkDemoRateLimit(): Promise<RateLimitCheckResult> {
     // Controlled rejection: Reject demo login gracefully without crashing
     return {
       allowed: false,
+      code: 'DEMO_LIMITER_UNAVAILABLE',
       message: 'Sistem log masuk demo tidak dapat memproses permintaan anda buat masa ini. Sila cuba sebentar lagi.',
     };
   }
