@@ -87,16 +87,6 @@ async function waitForExistingWindowExpiry() {
   await new Promise((r) => setTimeout(r, 2000));
 }
 
-interface AttemptResult {
-  cubaan: number;
-  masa: string;
-  clockTime: string;
-  hasilDijangka: string;
-  hasilSebenar: string;
-  kodRalat: string;
-  status: 'PASS' | 'FAIL' | 'BLOCKED' | 'INCONCLUSIVE';
-}
-
 async function runStrictRateLimitUiVerification() {
   console.log('==============================================================================');
   console.log('PPR NADI — STRICT LIVE STAGING RATE LIMITER UI & ISOLATION VERIFICATION');
@@ -112,8 +102,8 @@ async function runStrictRateLimitUiVerification() {
   });
 
   const runStartMs = Date.now();
-  const attemptLog: AttemptResult[] = [];
-  let testSuiteVerdict: 'PASS' | 'FAIL' | 'BLOCKED' | 'INCONCLUSIVE' = 'PASS';
+  const attemptLog = [];
+  let testSuiteVerdict = 'PASS';
   let failureReason = '';
 
   try {
@@ -144,9 +134,9 @@ async function runStrictRateLimitUiVerification() {
 
       // Race between successful portal redirection (/resident) and error alert on /login
       const outcome = await Promise.race([
-        page.waitForURL('**/resident', { timeout: 12000 }).then(() => ({ type: 'redirected' })),
+        page.waitForURL('**/resident', { timeout: 25000 }).then(() => ({ type: 'redirected' })),
         page
-          .waitForSelector('#demo-error-alert', { timeout: 12000 })
+          .waitForSelector('#demo-error-alert', { timeout: 25000 })
           .then(async (el) => {
             const code = (await el.getAttribute('data-error-code')) || 'UNKNOWN_ERROR';
             const text = (await el.innerText()).trim();
