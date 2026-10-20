@@ -98,7 +98,7 @@ function StatusBadge({ report }: StatusBadgeProps) {
   if (report.status === 'dismissed') {
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
-        {t.status.dismissed}
+        {t.history.filterDismissed}
       </span>
     );
   }
@@ -146,7 +146,7 @@ function MiniProgress({ report }: MiniProgressProps) {
   const progress = evaluateReportProgress(report, incidentStatus ?? null);
 
   if (report.status === 'dismissed') return null;
-  if (!progress.canShowProgress && progress.stepReceived === 'pending') return null;
+  if (!progress.canShowProgress) return null;
 
   const steps = [
     { state: progress.stepReceived, label: t.history.timelineStepReceived },

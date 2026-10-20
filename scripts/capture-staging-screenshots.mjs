@@ -10,7 +10,11 @@ if (fs.existsSync('.env.staging.local')) {
 const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const STAGING_URL = 'https://ppr-nadi-staging.vercel.app';
 const RESIDENT_EMAIL = 'resident.rejang@nadi.local';
-const RESIDENT_PASS = process.env.STAGING_RESIDENT_PASSWORD || 'ResidentPPR@2026!';
+const RESIDENT_PASS = process.env.STAGING_RESIDENT_PASSWORD;
+if (!RESIDENT_PASS) {
+  console.error('Configuration error: STAGING_RESIDENT_PASSWORD is required in environment.');
+  process.exit(1);
+}
 
 const ARTIFACT_DIR = 'C:\\Users\\shams\\.gemini\\antigravity-ide\\brain\\f73c5ee6-76ec-4b98-ac3e-6e23b5a34c2a';
 

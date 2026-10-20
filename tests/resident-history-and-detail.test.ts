@@ -187,6 +187,8 @@ describe('PPR NADI — Resident History & Report Detail Logic', () => {
       'lightboxLoading',
       'lightboxError',
       'noImagesAttached',
+      'timelineStepAwaitingResolution',
+      'officialUpdatesTitle',
     ] as const;
 
     for (const key of requiredKeys) {
@@ -195,5 +197,25 @@ describe('PPR NADI — Resident History & Report Detail Logic', () => {
       expect(translations.ms.history[key].length).toBeGreaterThan(0);
       expect(translations.en.history[key].length).toBeGreaterThan(0);
     }
+  });
+
+  it('7. Dismissed report evaluates as dismissed and never as active or resolved', () => {
+    const dismissedReport = mockReports.find((r) => r.status === 'dismissed')!;
+    const evalResult = evaluateReportProgress(dismissedReport, null);
+    const active = isReportActive(dismissedReport, null);
+
+    expect(evalResult.isDismissed).toBe(true);
+    expect(evalResult.canShowProgress).toBe(false);
+    expect(evalResult.stepResolved).toBe('pending');
+    expect(active).toBe(false);
+  });
+
+  it('8. In-progress report does not falsely show completed resolution', () => {
+    const activeReport = mockReports.find((r) => r.id === 'rep-linked-active-1')!;
+    const evalResult = evaluateReportProgress(activeReport, 'in_maintenance');
+
+    expect(evalResult.stepAction).toBe('active');
+    expect(evalResult.stepResolved).toBe('pending');
+    expect(evalResult.stepResolved === 'completed').toBe(false);
   });
 });

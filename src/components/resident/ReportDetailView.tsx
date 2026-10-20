@@ -102,7 +102,22 @@ export function ReportDetailView({ report }: ReportDetailViewProps) {
   // Lightbox state
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const activeTriggerRef = useRef<HTMLElement | null>(null);
+  const thumbnailRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const handleOpenLightbox = useCallback((idx: number, e: React.MouseEvent<HTMLButtonElement>) => {
+    activeTriggerRef.current = e.currentTarget;
+    setLightboxIndex(idx);
+    setLightboxOpen(true);
+  }, []);
+
+  const handleCloseLightbox = useCallback(() => {
+    setLightboxOpen(false);
+  }, []);
+
+  const getThumbnailElement = useCallback((idx: number) => {
+    return thumbnailRefs.current[idx] || null;
+  }, []);
 
   // Copy states
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
@@ -222,12 +237,18 @@ export function ReportDetailView({ report }: ReportDetailViewProps) {
               onClick={() => handleCopy(displayRef, false)}
               aria-label={t.history.copyRef}
               title={t.history.copyRef}
-              className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:text-[#1554AD] hover:bg-blue-50 transition-colors"
+              className="min-h-[40px] px-2.5 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 text-slate-600 hover:text-[#1554AD] hover:bg-blue-50 transition-colors"
             >
               {copyState === 'copied' ? (
-                <Check className="w-4 h-4 text-emerald-600" />
+                <>
+                  <Check className="w-4 h-4 text-emerald-600" />
+                  <span className="text-xs font-bold text-emerald-600">{t.history.copied}</span>
+                </>
               ) : copyState === 'failed' ? (
-                <AlertTriangle className="w-4 h-4 text-red-500" />
+                <>
+                  <AlertTriangle className="w-4 h-4 text-red-500" />
+                  <span className="text-xs font-bold text-red-500">{t.history.copyFailed}</span>
+                </>
               ) : (
                 <Copy className="w-4 h-4" />
               )}
@@ -237,7 +258,7 @@ export function ReportDetailView({ report }: ReportDetailViewProps) {
           <div>
             {isDismissed ? (
               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
-                {t.status.dismissed}
+                {t.history.filterDismissed}
               </span>
             ) : isResolved ? (
               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -325,145 +346,182 @@ export function ReportDetailView({ report }: ReportDetailViewProps) {
         </div>
 
         {/* Timeline steps */}
-        <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
-          {/* Step 1: Diterima */}
-          <div className="relative">
-            <div className="absolute -left-6 top-1 w-5 h-5 rounded-full bg-[#1554AD] text-white flex items-center justify-center ring-4 ring-white">
-              <Check className="w-3 h-3" />
-            </div>
-            <div>
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-xs font-bold text-[#17212F]">
-                  {t.history.timelineStepReceived}
-                </h3>
-                <span className="text-[11px] text-slate-400">
-                  {formatDateTime(report.created_at)}
-                </span>
+        {isDismissed ? (
+          <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
+            {/* Step 1: Diterima */}
+            <div className="relative">
+              <div className="absolute -left-6 top-1 w-5 h-5 rounded-full bg-[#1554AD] text-white flex items-center justify-center ring-4 ring-white">
+                <Check className="w-3 h-3" />
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {t.history.timelineStepReceivedDesc}
-              </p>
+              <div>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-xs font-bold text-[#17212F]">
+                    {t.history.timelineStepReceived}
+                  </h3>
+                  <span className="text-[11px] text-slate-400">
+                    {formatDateTime(report.created_at)}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {t.history.timelineStepReceivedDesc}
+                </p>
+              </div>
+            </div>
+
+            {/* Step 2: Ditolak */}
+            <div className="relative">
+              <div className="absolute -left-6 top-1 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center ring-4 ring-white">
+                <ShieldAlert className="w-3 h-3" />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-red-700">
+                  {t.history.filterDismissed}
+                </h3>
+                <p className="text-xs text-red-600 mt-0.5">
+                  {t.history.detailDismissedBanner}
+                </p>
+              </div>
             </div>
           </div>
-
-          {/* Step 2: Dalam Semakan */}
-          <div className="relative">
-            <div
-              className={`absolute -left-6 top-1 w-5 h-5 rounded-full flex items-center justify-center ring-4 ring-white ${
-                progress.stepReview === 'completed'
-                  ? 'bg-[#1554AD] text-white'
-                  : progress.stepReview === 'active'
-                  ? 'bg-amber-500 text-white animate-pulse'
-                  : 'bg-slate-200 text-slate-400'
-              }`}
-            >
-              {progress.stepReview === 'completed' ? (
+        ) : (
+          <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
+            {/* Step 1: Diterima */}
+            <div className="relative">
+              <div className="absolute -left-6 top-1 w-5 h-5 rounded-full bg-[#1554AD] text-white flex items-center justify-center ring-4 ring-white">
                 <Check className="w-3 h-3" />
-              ) : (
-                <span className="w-2 h-2 rounded-full bg-white" />
-              )}
+              </div>
+              <div>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-xs font-bold text-[#17212F]">
+                    {t.history.timelineStepReceived}
+                  </h3>
+                  <span className="text-[11px] text-slate-400">
+                    {formatDateTime(report.created_at)}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {t.history.timelineStepReceivedDesc}
+                </p>
+              </div>
             </div>
-            <div>
-              <div className="flex items-center justify-between gap-2">
+
+            {/* Step 2: Dalam Semakan */}
+            <div className="relative">
+              <div
+                className={`absolute -left-6 top-1 w-5 h-5 rounded-full flex items-center justify-center ring-4 ring-white ${
+                  progress.stepReview === 'completed'
+                    ? 'bg-[#1554AD] text-white'
+                    : progress.stepReview === 'active'
+                    ? 'bg-amber-500 text-white animate-pulse'
+                    : 'bg-slate-200 text-slate-400'
+                }`}
+              >
+                {progress.stepReview === 'completed' ? (
+                  <Check className="w-3 h-3" />
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-white" />
+                )}
+              </div>
+              <div>
                 <h3 className="text-xs font-bold text-[#17212F]">
                   {t.history.timelineStepReview}
                 </h3>
-                {report.updated_at && progress.stepReview === 'completed' && (
-                  <span className="text-[11px] text-slate-400">
-                    {formatDateTime(report.updated_at)}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {t.history.timelineStepReviewDesc}
-              </p>
-            </div>
-          </div>
-
-          {/* Step 3: Tindakan diambil / Kemas Kini Rasmi */}
-          <div className="relative">
-            <div
-              className={`absolute -left-6 top-1 w-5 h-5 rounded-full flex items-center justify-center ring-4 ring-white ${
-                progress.stepAction === 'completed' || (report.publishedBulletins && report.publishedBulletins.length > 0)
-                  ? 'bg-[#1554AD] text-white'
-                  : progress.stepAction === 'active'
-                  ? 'bg-blue-600 text-white animate-pulse'
-                  : 'bg-slate-200 text-slate-400'
-              }`}
-            >
-              {progress.stepAction === 'completed' ? (
-                <Check className="w-3 h-3" />
-              ) : (
-                <span className="w-2 h-2 rounded-full bg-white" />
-              )}
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xs font-bold text-[#17212F]">
-                {t.history.timelineStepAction}
-              </h3>
-
-              {/* Real published bulletins from database */}
-              {report.publishedBulletins && report.publishedBulletins.length > 0 ? (
-                <div className="space-y-2 mt-2">
-                  {report.publishedBulletins.map((bulletin) => (
-                    <div
-                      key={bulletin.update_id}
-                      className="p-3 rounded-xl bg-blue-50/70 border border-blue-100 text-xs space-y-1"
-                    >
-                      <div className="flex items-center justify-between gap-1">
-                        <strong className="text-[#1554AD]">{bulletin.update_title}</strong>
-                        <span className="text-[10px] text-slate-400">
-                          {formatDateTime(bulletin.published_at)}
-                        </span>
-                      </div>
-                      <p className="text-slate-600 leading-snug">{bulletin.message_bm}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : report.status === 'linked' ? (
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-start gap-2">
-                  <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                  <p>{t.history.detailLinkedNoteNoIncident}</p>
-                </div>
-              ) : (
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {t.history.timelineStepActionDesc}
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {t.history.timelineStepReviewDesc}
                 </p>
-              )}
+              </div>
             </div>
-          </div>
 
-          {/* Step 4: Selesai */}
-          <div className="relative">
-            <div
-              className={`absolute -left-6 top-1 w-5 h-5 rounded-full flex items-center justify-center ring-4 ring-white ${
-                progress.stepResolved === 'completed'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-slate-200 text-slate-400'
-              }`}
-            >
-              {progress.stepResolved === 'completed' ? (
-                <Check className="w-3 h-3" />
-              ) : (
-                <span className="w-2 h-2 rounded-full bg-white" />
-              )}
-            </div>
-            <div>
-              <h3 className="text-xs font-bold text-[#17212F]">
-                {t.history.timelineStepResolved}
-              </h3>
-              <p
-                className={`text-xs mt-0.5 ${
-                  progress.stepResolved === 'completed'
-                    ? 'text-emerald-700 font-semibold'
-                    : 'text-slate-400'
+            {/* Step 3: Tindakan diambil / Kemas Kini Rasmi */}
+            <div className="relative">
+              <div
+                className={`absolute -left-6 top-1 w-5 h-5 rounded-full flex items-center justify-center ring-4 ring-white ${
+                  progress.stepAction === 'completed'
+                    ? 'bg-[#1554AD] text-white'
+                    : progress.stepAction === 'active'
+                    ? 'bg-blue-600 text-white animate-pulse'
+                    : 'bg-slate-200 text-slate-400'
                 }`}
               >
-                {t.history.timelineStepResolvedDesc}
-              </p>
+                {progress.stepAction === 'completed' ? (
+                  <Check className="w-3 h-3" />
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-white" />
+                )}
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold text-[#17212F]">
+                  {t.history.timelineStepAction}
+                </h3>
+
+                {/* Real published bulletins from database as Official Updates */}
+                {report.publishedBulletins && report.publishedBulletins.length > 0 ? (
+                  <div className="space-y-2 mt-2">
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                      {t.history.officialUpdatesTitle}
+                    </p>
+                    {report.publishedBulletins.map((bulletin) => (
+                      <div
+                        key={bulletin.update_id}
+                        className="p-3 rounded-xl bg-blue-50/70 border border-blue-100 text-xs space-y-1"
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <strong className="text-[#1554AD]">{bulletin.update_title}</strong>
+                          <span className="text-[10px] text-slate-400">
+                            {formatDateTime(bulletin.published_at)}
+                          </span>
+                        </div>
+                        <p className="text-slate-600 leading-snug">{bulletin.message_bm}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : report.status === 'linked' ? (
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-start gap-2">
+                    <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                    <p>{t.history.detailLinkedNoteNoIncident}</p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {t.history.timelineStepActionDesc}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Step 4: Selesai */}
+            <div className="relative">
+              <div
+                className={`absolute -left-6 top-1 w-5 h-5 rounded-full flex items-center justify-center ring-4 ring-white ${
+                  progress.stepResolved === 'completed'
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-slate-200 text-slate-400'
+                }`}
+              >
+                {progress.stepResolved === 'completed' ? (
+                  <Check className="w-3 h-3" />
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-white" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-[#17212F]">
+                  {t.history.timelineStepResolved}
+                </h3>
+                <p
+                  className={`text-xs mt-0.5 ${
+                    progress.stepResolved === 'completed'
+                      ? 'text-emerald-700 font-semibold'
+                      : 'text-slate-400'
+                  }`}
+                >
+                  {progress.stepResolved === 'completed'
+                    ? t.history.timelineStepResolvedDesc
+                    : t.history.timelineStepAwaitingResolution}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Photo Evidence Section */}
@@ -492,13 +550,13 @@ export function ReportDetailView({ report }: ReportDetailViewProps) {
               <button
                 key={att.id}
                 type="button"
-                ref={idx === 0 ? triggerRef : undefined}
-                onClick={() => {
-                  setLightboxIndex(idx);
-                  setLightboxOpen(true);
+                ref={(el) => {
+                  thumbnailRefs.current[idx] = el;
                 }}
+                onClick={(e) => handleOpenLightbox(idx, e)}
                 className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 bg-slate-100 hover:opacity-90 active:scale-95 transition-all focus:outline-hidden focus:ring-2 focus:ring-[#1554AD] min-h-[44px]"
                 aria-label={`${t.history.detailEvidenceTitle} ${idx + 1}`}
+                data-testid={`thumbnail-button-${idx}`}
               >
                 {att.signedUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -528,8 +586,9 @@ export function ReportDetailView({ report }: ReportDetailViewProps) {
         }))}
         initialIndex={lightboxIndex}
         isOpen={lightboxOpen}
-        onClose={() => setLightboxOpen(false)}
-        triggerRef={triggerRef}
+        onClose={handleCloseLightbox}
+        triggerRef={activeTriggerRef}
+        getTriggerElement={getThumbnailElement}
       />
 
       {/* Manual Copy Dialog Fallback */}

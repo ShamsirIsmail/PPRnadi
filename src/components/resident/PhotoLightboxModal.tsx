@@ -16,6 +16,7 @@ interface PhotoLightboxModalProps {
   isOpen: boolean;
   onClose: () => void;
   triggerRef?: React.RefObject<HTMLElement | null>;
+  getTriggerElement?: (index: number) => HTMLElement | null;
 }
 
 export function PhotoLightboxModal({
@@ -24,6 +25,7 @@ export function PhotoLightboxModal({
   isOpen,
   onClose,
   triggerRef,
+  getTriggerElement,
 }: PhotoLightboxModalProps) {
   const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -32,13 +34,13 @@ export function PhotoLightboxModal({
   const modalRef = useRef<HTMLDivElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const prevFocusedRef = useRef<HTMLElement | null>(null);
+  const wasOpenRef = useRef(false);
 
   // Sync index when initialIndex changes or modal opens
   useEffect(() => {
     if (isOpen) {
       setCurrentIndex(Math.max(0, Math.min(initialIndex, images.length - 1)));
       setLoadState('loading');
-      prevFocusedRef.current = document.activeElement as HTMLElement | null;
     }
   }, [isOpen, initialIndex, images.length]);
 
@@ -50,16 +52,26 @@ export function PhotoLightboxModal({
   // Focus trap and restore
   useEffect(() => {
     if (!isOpen) {
-      // Restore focus to trigger element or previously focused element
-      const target = triggerRef?.current || prevFocusedRef.current;
-      target?.focus?.();
+      if (wasOpenRef.current) {
+        wasOpenRef.current = false;
+        const target =
+          triggerRef?.current ||
+          (getTriggerElement ? getTriggerElement(currentIndex) : null) ||
+          prevFocusedRef.current;
+        setTimeout(() => {
+          target?.focus?.();
+        }, 10);
+      }
       return;
     }
 
-    // Initial focus on close button
-    const timer = setTimeout(() => {
-      closeBtnRef.current?.focus();
-    }, 50);
+    if (!wasOpenRef.current) {
+      wasOpenRef.current = true;
+      prevFocusedRef.current = document.activeElement as HTMLElement | null;
+      setTimeout(() => {
+        closeBtnRef.current?.focus();
+      }, 50);
+    }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -102,10 +114,9 @@ export function PhotoLightboxModal({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => {
-      clearTimeout(timer);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose, images.length, triggerRef]);
+  }, [isOpen, currentIndex, getTriggerElement, triggerRef, onClose, images.length]);
 
   const handlePrev = useCallback(() => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : prev));
