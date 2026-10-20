@@ -396,11 +396,11 @@ export function ManagementShell({
         {/* Top Header */}
         <header className="relative bg-white border-b border-[#edf0f5] px-4 sm:px-6 py-3.5 min-h-[64px] flex items-center justify-between gap-4">
           {/* Breadcrumb */}
-          <div className="text-xs text-[#7b8ba3] flex items-center gap-1.5 font-medium">
+          <nav aria-label="Breadcrumb" className="text-xs text-[#7b8ba3] flex items-center gap-1.5 font-medium">
             <span>{t.management.crumbManagement}</span>
             <span className="text-slate-300">/</span>
             <strong className="text-[#37455b] font-semibold">{activeCrumb}</strong>
-          </div>
+          </nav>
 
           {/* Account Controls: Language, Bell, Avatar, Sign Out */}
           <div className="flex items-center gap-3 sm:gap-4">
@@ -416,20 +416,22 @@ export function ManagementShell({
                 aria-expanded={notificationOpen}
                 className={`relative w-9 h-9 rounded-lg flex items-center justify-center text-[#37455b] hover:bg-[#f1f6fd] transition-colors focus:outline-hidden focus:ring-2 focus:ring-[#1965c6] ${
                   bellRinging ? 'bell-ring-active' : ''
-                } ${
-                  unreadNotifications.length > 0
-                    ? "after:content-[''] after:absolute after:right-1.5 after:top-1.5 after:w-2 after:h-2 after:bg-[#e83c4c] after:border-2 after:border-white after:rounded-full"
-                    : ''
                 }`}
               >
-                <Bell className="w-4.5 h-4.5" aria-hidden="true" />
+                <Bell className={`w-4.5 h-4.5 ${bellRinging ? 'bell-ring-active' : ''}`} aria-hidden="true" />
+                {unreadNotifications.length > 0 && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#e83c4c] ring-2 ring-white"
+                  />
+                )}
               </button>
 
               {/* Floating Notification Pop-up Dialog */}
               {notificationOpen && (
                 <div
                   id="management-notification-panel"
-                  role="region"
+                  role="alert"
                   aria-label="Notifikasi aduan baharu"
                   aria-live="polite"
                   className="absolute right-0 top-12 w-80 sm:w-88 bg-white border border-[#e4eaf3] rounded-xl shadow-2xl p-4 z-50 space-y-3"
