@@ -23,6 +23,15 @@ import {
 } from 'lucide-react';
 import type { FacilityCategory } from '@/types/database';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import {
+  SUB_ISSUE_OPTIONS,
+  getSubIssueLabel,
+  isEmergencySubIssue,
+  buildDeterministicSummary,
+  formatLocationText,
+  type GuidedSubmitPayload,
+  type SubIssueId,
+} from '@/lib/report/report-summary';
 
 export interface BuildingOption {
   id: string;
@@ -50,7 +59,7 @@ export interface GuidedFourStepFlowProps {
   selectedImages: Array<{ file: File; url: string }>;
   onAddImages: (files: File[]) => void;
   onRemoveImage: (index: number) => void;
-  onSubmit: (e?: React.FormEvent) => void;
+  onSubmit: (payload: GuidedSubmitPayload) => void;
   isSubmitting: boolean;
   validationError: string | null;
   setValidationError: (err: string | null) => void;
@@ -113,7 +122,7 @@ export function GuidedFourStepFlow({
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   // Sub-issue detail (Progressive Disclosure)
-  const [subIssue, setSubIssue] = useState<string>('');
+  const [subIssue, setSubIssue] = useState<SubIssueId | ''>('');
   const [extraText, setExtraText] = useState<string>('');
   const [extraOpen, setExtraOpen] = useState<boolean>(false);
   const [voiceDemoOpen, setVoiceDemoOpen] = useState<boolean>(false);
@@ -136,20 +145,6 @@ export function GuidedFourStepFlow({
   };
 
   const maxFloors = currentBuilding.total_floors || 18;
-
-  // Sub-issue configurations matching approved prototype
-  const subOptions: Record<string, string[]> = {
-    water_supply: locale === 'ms'
-      ? ['Tiada air', 'Tekanan rendah', 'Kebocoran', 'Masalah lain']
-      : ['No water supply', 'Low pressure', 'Pipe leakage', 'Other issue'],
-    lift: locale === 'ms'
-      ? ['Tidak bergerak', 'Pintu bermasalah', 'Ada orang terperangkap', 'Kerosakan lain']
-      : ['Not moving', 'Door problem', 'People trapped inside', 'Other damage'],
-    corridor_lighting: locale === 'ms'
-      ? ['Tidak menyala', 'Berkelip', 'Kerosakan lain']
-      : ['Not working', 'Flickering', 'Other damage'],
-    other: [],
-  };
 
   // Step names
   const stepNames = locale === 'ms'
@@ -220,43 +215,20 @@ export function GuidedFourStepFlow({
 
   // Helper: Format Location String
   const getLocationText = () => {
-    const bName = currentBuilding.name;
-    if (selectedFloor === 'G') {
-      return locale === 'ms' ? `${bName} · Aras bawah` : `${bName} · Ground floor`;
-    }
-    if (selectedFloor === 'unknown') {
-      return locale === 'ms' ? `${bName} · Tingkat belum pasti` : `${bName} · Floor uncertain`;
-    }
-    if (selectedFloor) {
-      return locale === 'ms' ? `${bName} · Tingkat ${selectedFloor}` : `${bName} · Floor ${selectedFloor}`;
-    }
-    return bName;
+    return formatLocationText(currentBuilding.name, selectedFloor, locale);
   };
 
   // Helper: Format Synthesized Deterministic Summary (NO AI, 100% factual)
   const getSynthesizedSummary = () => {
-    const catLabel = category === 'water_supply'
-      ? (locale === 'ms' ? 'Bekalan air' : 'Water supply')
-      : category === 'lift'
-      ? (locale === 'ms' ? 'Lif' : 'Elevator')
-      : category === 'corridor_lighting'
-      ? (locale === 'ms' ? 'Lampu koridor' : 'Corridor lighting')
-      : (locale === 'ms' ? 'Lain-lain' : 'Other');
-
-    const loc = getLocationText().replace(' · ', ', ');
-    const specific = specificLocation.trim() ? ` (${specificLocation.trim()})` : '';
-
-    if (category === 'other') {
-      const mainText = extraText.trim() || description.trim();
-      return `${catLabel} di ${loc}${specific}. ${mainText}`.trim();
-    }
-
-    const detailText = subIssue ? ` ${subIssue.toLowerCase()}` : '';
-    let summary = `${catLabel}${detailText} di ${loc}${specific}.`;
-    if (extraText.trim()) {
-      summary += ` ${extraText.trim()}`;
-    }
-    return summary;
+    return buildDeterministicSummary({
+      buildingName: currentBuilding.name,
+      floor: selectedFloor,
+      specificLocation,
+      category,
+      subIssueId: subIssue || undefined,
+      extraText: category === 'other' ? (extraText.trim() || description.trim()) : extraText.trim(),
+      locale,
+    });
   };
 
   // Block Selection with Dynamic Floor Bounds Clearing
@@ -338,10 +310,19 @@ export function GuidedFourStepFlow({
         setStep(3);
       }
     } else if (step === 3) {
-      // Final Submit
-      // Ensure description is properly populated
-      setDescription(getSynthesizedSummary());
-      onSubmit();
+      // Final Submit: construct direct payload from current draft state
+      const finalSummary = getSynthesizedSummary();
+      setDescription(finalSummary);
+      onSubmit({
+        buildingId: selectedBuildingId,
+        floor: selectedFloor,
+        category,
+        subIssueId: subIssue || undefined,
+        specificLocation: specificLocation.trim() || undefined,
+        extraText: category === 'other' ? (extraText.trim() || description.trim()) : (extraText.trim() || undefined),
+        description: finalSummary,
+        files: selectedImages.map((img) => img.file),
+      });
     }
   };
 
@@ -380,7 +361,7 @@ export function GuidedFourStepFlow({
     }
   };
 
-  const isTrappedInLift = category === 'lift' && subIssue.toLowerCase().includes('terperangkap');
+  const isTrappedInLift = isEmergencySubIssue(category, subIssue);
 
   return (
     <div className="max-w-xl mx-auto space-y-5 pb-16">
@@ -704,21 +685,21 @@ export function GuidedFourStepFlow({
           </div>
 
           {/* Sub-Issue Progressive Options (For standard categories) */}
-          {category && category !== 'other' && subOptions[category]?.length > 0 && (
+          {category && category !== 'other' && SUB_ISSUE_OPTIONS[category]?.length > 0 && (
             <div className="space-y-2 pt-2 border-t border-slate-100">
               <label className="block text-xs font-bold text-slate-700">
                 {locale === 'ms' ? 'Keadaan masalah' : 'Specific condition'}
               </label>
 
               <div className="space-y-2">
-                {subOptions[category].map((opt) => {
-                  const isOptSelected = subIssue === opt;
+                {SUB_ISSUE_OPTIONS[category].map((opt) => {
+                  const isOptSelected = subIssue === opt.id;
                   return (
                     <button
-                      key={opt}
+                      key={opt.id}
                       type="button"
                       onClick={() => {
-                        setSubIssue(opt);
+                        setSubIssue(opt.id);
                         setStepError(null);
                       }}
                       aria-pressed={isOptSelected}
@@ -728,7 +709,7 @@ export function GuidedFourStepFlow({
                           : 'bg-white border border-slate-200 text-slate-800 hover:bg-slate-50'
                       }`}
                     >
-                      <span>{opt}</span>
+                      <span>{opt.label[locale]}</span>
                       <span className="text-base leading-none">
                         {isOptSelected ? '✓' : '○'}
                       </span>
@@ -1020,7 +1001,7 @@ export function GuidedFourStepFlow({
                 : category === 'corridor_lighting'
                 ? (locale === 'ms' ? 'Lampu koridor' : 'Corridor lighting')
                 : (locale === 'ms' ? 'Lain-lain' : 'Other issues')}
-              {subIssue ? ` · ${subIssue}` : ''}
+              {subIssue ? ` · ${getSubIssueLabel(subIssue, locale)}` : ''}
             </strong>
             <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
               {getSynthesizedSummary()}

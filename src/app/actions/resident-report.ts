@@ -801,18 +801,27 @@ async function insertNewReport(
   formData: FormData,
   customReportId: string | null
 ): Promise<{ success: boolean; reportId?: string; error?: string }> {
-  // 1. Resolve Target Building (defaults to assigned building, supports any building in estate)
+  // 1. Resolve Target Building (must belong to resident's assigned estate)
   let targetBuildingId = assignedBuildingId;
   const rawBuildingId = (formData.get('building_id') as string)?.trim();
-  if (rawBuildingId && rawBuildingId !== assignedBuildingId) {
-    const { data: bldg } = await supabase
+  if (rawBuildingId) {
+    const { data: bldg, error: bldgErr } = await supabase
       .from('buildings')
       .select('id, estate_id')
       .eq('id', rawBuildingId)
       .maybeSingle();
-    if (bldg && assignedEstateId && bldg.estate_id === assignedEstateId) {
-      targetBuildingId = bldg.id;
+
+    if (bldgErr || !bldg) {
+      return { success: false, error: 'Bangunan yang dipilih tidak dijumpai.' };
     }
+
+    if (assignedEstateId && bldg.estate_id !== assignedEstateId) {
+      return {
+        success: false,
+        error: 'Anda hanya dibenarkan menghantar aduan bagi bangunan dalam kawasan PPR anda.',
+      };
+    }
+    targetBuildingId = bldg.id;
   }
 
   // 2. Validate Category
@@ -823,8 +832,8 @@ async function insertNewReport(
 
   // 3. Validate Description
   const description = (formData.get('description') as string)?.trim();
-  if (!description || description.length < 10) {
-    return { success: false, error: 'Penerangan kerosakan mestilah sekurang-kurangnya 10 aksara.' };
+  if (!description || description.length < 5) {
+    return { success: false, error: 'Penerangan kerosakan mestilah sekurang-kurangnya 5 aksara.' };
   }
 
   // 4. Validate Urgency

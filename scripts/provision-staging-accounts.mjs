@@ -107,6 +107,15 @@ async function main() {
       estateId: 'ppr-desa-rejang',
       buildingId: null,
       unitNumber: null
+    },
+    {
+      email: 'resident.sentosa@nadi.local',
+      password: process.env.STAGING_ALIEN_RESIDENT_PASSWORD || residentPassword,
+      fullName: 'Mohd Faizal bin Kassim (Penduduk PPR Sentosa)',
+      role: 'resident',
+      estateId: 'ppr-sentosa-demo',
+      buildingId: '92b00516-6fb0-459b-96d2-cf11dee36565',
+      unitNumber: '03-05'
     }
   ];
 

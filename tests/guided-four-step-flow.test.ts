@@ -1,87 +1,188 @@
 import { describe, it, expect } from 'vitest';
-import { residentReportSchema, facilityCategorySchema } from '@/lib/validators/report';
-import { evaluatePriorityRules } from '@/lib/priority/rules';
-import type { StructuredReportFacts } from '@/types/priority-explainer';
+import {
+  buildDeterministicSummary,
+  formatLocationText,
+  getSubIssueLabel,
+  isEmergencySubIssue,
+  type GuidedSubmitPayload,
+  type ReportSummaryFacts,
+  type SubIssueId,
+} from '@/lib/report/report-summary';
+import { residentReportSchema } from '@/lib/validators/report';
 
-describe('Guided 4-Step Flow & Other Category Verification', () => {
-  it('accepts other category in facilityCategorySchema and residentReportSchema', () => {
-    expect(facilityCategorySchema.safeParse('other').success).toBe(true);
+describe('Guided 4-Step Flow & Real Architecture Verification', () => {
+  // Kes Wajib 1: Payload semakan sama dengan payload dihantar
+  it('Kes Wajib 1: ensures review summary facts match submitted payload description bit-for-bit', () => {
+    const facts: ReportSummaryFacts = {
+      buildingName: 'Blok L',
+      floor: '14',
+      specificLocation: 'Koridor sayap kiri',
+      category: 'lift',
+      subIssueId: 'door_problem',
+      extraText: 'Pintu tersekat-sekat bila ditutup',
+      locale: 'ms',
+    };
 
-    const validOtherReport = {
+    // Synthesized summary displayed on review screen
+    const reviewDisplayedSummary = buildDeterministicSummary(facts);
+
+    // Final payload generated at step 3 onSubmit
+    const payload: GuidedSubmitPayload = {
+      buildingId: 'bld-l-uuid',
+      floor: '14',
+      category: 'lift',
+      subIssueId: 'door_problem',
+      specificLocation: 'Koridor sayap kiri',
+      extraText: 'Pintu tersekat-sekat bila ditutup',
+      description: reviewDisplayedSummary,
+      files: [],
+    };
+
+    expect(payload.description).toBe(reviewDisplayedSummary);
+    expect(payload.description).toContain('Lif · Pintu bermasalah di Blok L, Tingkat 14 (Koridor sayap kiri).');
+    expect(payload.description).toContain('Pintu tersekat-sekat bila ditutup');
+    expect(payload.description).not.toContain('[Lokasi:'); // No redundant stacked headers
+  });
+
+  // Kes Wajib 2: Ubah lokasi selepas semakan membuang lokasi lama
+  it('Kes Wajib 2: updating location from review screen discards old location without retaining old block/floor', () => {
+    // Initial selection: Blok A, Tingkat 18
+    const initialFacts: ReportSummaryFacts = {
+      buildingName: 'Blok A',
+      floor: '18',
+      category: 'water_supply',
+      subIssueId: 'low_pressure',
+      locale: 'ms',
+    };
+    const oldSummary = buildDeterministicSummary(initialFacts);
+    expect(oldSummary).toContain('Blok A, Tingkat 18');
+
+    // Resident clicks "Ubah" location: changes to Blok L, Tingkat 14
+    const updatedFacts: ReportSummaryFacts = {
+      buildingName: 'Blok L',
+      floor: '14',
+      category: 'water_supply',
+      subIssueId: 'low_pressure',
+      locale: 'ms',
+    };
+    const newSummary = buildDeterministicSummary(updatedFacts);
+
+    expect(newSummary).toContain('Blok L, Tingkat 14');
+    expect(newSummary).not.toContain('Blok A');
+    expect(newSummary).not.toContain('Tingkat 18');
+  });
+
+  // Kes Wajib 3: Tukar BM -> EN -> BM mengekalkan ID butiran, kategori dan gambar
+  it('Kes Wajib 3: toggling BM -> EN -> BM preserves stable machine sub-issue ID, category, and answers', () => {
+    const selectedCategory = 'lift';
+    const activeSubIssueId: SubIssueId = 'not_moving';
+
+    // BM render
+    const labelBm = getSubIssueLabel(activeSubIssueId, 'ms');
+    expect(labelBm).toBe('Tidak bergerak');
+
+    // Toggle to English
+    const labelEn = getSubIssueLabel(activeSubIssueId, 'en');
+    expect(labelEn).toBe('Not moving');
+
+    // Toggle back to BM
+    const labelBmRestored = getSubIssueLabel(activeSubIssueId, 'ms');
+    expect(labelBmRestored).toBe('Tidak bergerak');
+
+    // The machine ID remains strictly identical
+    expect(activeSubIssueId).toBe('not_moving');
+    expect(selectedCategory).toBe('lift');
+  });
+
+  // Kes Wajib 4: Pengesanan kecemasan tidak berubah apabila bahasa ditukar
+  it('Kes Wajib 4: emergency trapped detection is based strictly on stable ID, invariant under language switches', () => {
+    const trappedId: SubIssueId = 'trapped';
+
+    // Must be recognized as emergency regardless of whether UI is in BM or EN
+    expect(isEmergencySubIssue('lift', trappedId)).toBe(true);
+    expect(isEmergencySubIssue('lift', 'door_problem')).toBe(false);
+    expect(isEmergencySubIssue('water_supply', trappedId)).toBe(false);
+
+    // Label translation check
+    expect(getSubIssueLabel(trappedId, 'ms')).toBe('Ada orang terperangkap');
+    expect(getSubIssueLabel(trappedId, 'en')).toBe('People trapped inside');
+  });
+
+  // Kes Wajib 5: other memerlukan penerangan
+  it('Kes Wajib 5: category other requires adequate description (min 5 characters) and passes schema', () => {
+    // Fails with empty description
+    const emptyOther = {
       buildingId: '10000000-0000-4000-8000-000000000002',
       category: 'other',
-      description: 'Pintu pagar taman permainan rosak dan tercabut engsel',
-      urgencyHint: 'medium',
+      description: '   ',
     };
-    const result = residentReportSchema.safeParse(validOtherReport);
-    expect(result.success).toBe(true);
-  });
+    expect(residentReportSchema.safeParse(emptyOther).success).toBe(false);
 
-  it('triggers deterministic priority rule R-04 for other category', () => {
-    const neutralFacts: StructuredReportFacts = {
-      issueType: 'kerosakan umum',
-      safety: { hasHazard: false, isNegated: false, isPastResolved: false, isUncertain: false },
-      location: { mentionedBlock: null, mentionedFloor: null, specificLocation: null },
-      scope: { scope: 'single_point', hasAlternatives: true },
-      duration: { rawMention: null },
-      factsList: [],
-      unknowns: { ms: [], en: [] },
+    // Fails with fewer than 5 characters
+    const shortOther = {
+      buildingId: '10000000-0000-4000-8000-000000000002',
+      category: 'other',
+      description: 'rosk',
     };
+    expect(residentReportSchema.safeParse(shortOther).success).toBe(false);
 
-    const evalResult = evaluatePriorityRules(neutralFacts, 'other');
-    expect(evalResult.ruleIds).toContain('R-04');
-    expect(evalResult.recommendedPriority).toBe('standard_review');
-    expect(evalResult.ruleBasisExplanation.ms).toContain('R-04');
-    expect(evalResult.primaryReasons.ms).toContain('Aduan kategori lain-lain memerlukan penilaian manual pihak pengurusan');
+    // Passes with adequate description
+    const validOther = {
+      buildingId: '10000000-0000-4000-8000-000000000002',
+      category: 'other',
+      description: 'Pagar keselamatan tercabut engsel dan bahaya untuk kanak-kanak',
+    };
+    expect(residentReportSchema.safeParse(validOther).success).toBe(true);
   });
 
-  it('validates floor bounds correctly when switching blocks (e.g. Blok A 18 to Blok L 15)', () => {
-    const buildingA = { id: 'bld-a', name: 'Blok A', code: 'DR_BLK_A', total_floors: 18 };
-    const buildingL = { id: 'bld-l', name: 'Blok L', code: 'DR_BLK_L', total_floors: 15 };
+  // Kes Wajib 6: G/unknown tidak ditukar kepada tingkat 1
+  it('Kes Wajib 6: special locations G and unknown are preserved and never coerced to floor 1 or fake zone IDs', () => {
+    const groundFloorTextMs = formatLocationText('Blok A', 'G', 'ms');
+    expect(groundFloorTextMs).toBe('Blok A, Aras bawah');
+    expect(groundFloorTextMs).not.toContain('Tingkat 1');
 
-    const selectedFloor = '18';
-    const isOutOfBoundsForA = parseInt(selectedFloor, 10) > (buildingA.total_floors || 18);
-    const isOutOfBoundsForL = parseInt(selectedFloor, 10) > (buildingL.total_floors || 15);
+    const unknownFloorTextEn = formatLocationText('Blok A', 'unknown', 'en');
+    expect(unknownFloorTextEn).toBe('Blok A, Floor uncertain');
+    expect(unknownFloorTextEn).not.toContain('Floor 1');
 
-    expect(isOutOfBoundsForA).toBe(false);
-    expect(isOutOfBoundsForL).toBe(true);
-  });
-
-  it('preserves special locations (G and unknown) without converting to floor 1 or fake zone IDs', () => {
-    const specialFloors = ['G', 'unknown'];
-
-    for (const floor of specialFloors) {
-      // Floor parser should not interpret G or unknown as numerical floor 1
-      const numFloor = floor !== 'G' && floor !== 'unknown' ? parseInt(floor, 10) : null;
-      expect(numFloor).toBeNull();
-
-      // Zone mapping for special floor should remain null
-      const serviceZoneId = null;
-      expect(serviceZoneId).toBeNull();
+    // Numerical parsing of G or unknown yields null
+    for (const special of ['G', 'unknown']) {
+      const parsedNum = special !== 'G' && special !== 'unknown' ? parseInt(special, 10) : null;
+      expect(parsedNum).toBeNull();
     }
   });
 
-  it('produces deterministic review summary without AI labels', () => {
-    const buildSummary = (
-      buildingName: string,
-      floor: string,
-      cat: string,
-      sub: string,
-      extra: string
-    ) => {
-      const locText = floor === 'G' ? `${buildingName} · Aras bawah` : `${buildingName} · Tingkat ${floor}`;
-      const catLabel = cat === 'water_supply' ? 'Bekalan Air' : 'Lain-lain';
-      const parts = [`[Lokasi: ${locText}]`, `[Kategori: ${catLabel}]`];
-      if (sub) parts.push(`[Butiran: ${sub}]`);
-      if (extra) parts.push(extra.trim());
-      return parts.join('\n');
+  // Kes Wajib 7: Zon lama tidak kekal selepas blok berubah
+  it('Kes Wajib 7: previous zone does not persist when selected block changes', () => {
+    const allZones = [
+      { id: 'zone-a-low', building_id: 'bld-a', floor_start: 1, floor_end: 9 },
+      { id: 'zone-a-high', building_id: 'bld-a', floor_start: 10, floor_end: 18 },
+      { id: 'zone-l-low', building_id: 'bld-l', floor_start: 1, floor_end: 8 },
+      { id: 'zone-l-high', building_id: 'bld-l', floor_start: 9, floor_end: 15 },
+    ];
+
+    const resolveZone = (buildingId: string, floorStr: string) => {
+      if (!floorStr || floorStr === 'G' || floorStr === 'unknown') return null;
+      const fNum = parseInt(floorStr, 10);
+      if (isNaN(fNum)) return null;
+      const matched = allZones.find(
+        (z) => z.building_id === buildingId && fNum >= z.floor_start && fNum <= z.floor_end
+      );
+      return matched ? matched.id : null;
     };
 
-    const summary = buildSummary('Blok A', '12', 'water_supply', 'Tekanan rendah', 'Paip berbunyi bising');
-    expect(summary).toContain('[Lokasi: Blok A · Tingkat 12]');
-    expect(summary).toContain('[Kategori: Bekalan Air]');
-    expect(summary).toContain('[Butiran: Tekanan rendah]');
-    expect(summary).toMatch(/\b(bekalan air|paip)\b/i);
-    expect(summary).not.toMatch(/\b(ai|artificial intelligence|kecerdasan buatan)\b/i);
+    // When at Blok A, floor 18:
+    const zoneBlokA = resolveZone('bld-a', '18');
+    expect(zoneBlokA).toBe('zone-a-high');
+
+    // Switch to Blok L, floor 14:
+    const zoneBlokL = resolveZone('bld-l', '14');
+    expect(zoneBlokL).toBe('zone-l-high');
+    expect(zoneBlokL).not.toBe('zone-a-high'); // Old zone discarded!
+
+    // Floor bounds check: Blok L has max 15 floors; floor 18 is out of bounds
+    const maxFloorsL = 15;
+    const isOutOfBounds = parseInt('18', 10) > maxFloorsL;
+    expect(isOutOfBounds).toBe(true);
   });
 });

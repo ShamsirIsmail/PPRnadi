@@ -29,6 +29,7 @@ import { GuidedVoiceAssistant } from '@/components/resident/GuidedVoiceAssistant
 import { GuidedFourStepFlow } from '@/components/resident/GuidedFourStepFlow';
 import { VoiceCorrectionModal } from '@/components/resident/VoiceCorrectionModal';
 import type { ReportDraftResult, ExistingDraftContext } from '@/app/actions/ai-draft';
+import type { GuidedSubmitPayload } from '@/lib/report/report-summary';
 
 export interface BuildingOption {
   id: string;
@@ -472,6 +473,69 @@ export function LaporForm({
 
     formData.set('description', finalDesc);
     formAction(formData);
+  };
+
+  // Guided Flow Final Submit Handler (guaranteed direct payload, no async state race conditions)
+  const handleGuidedSubmit = (payload: GuidedSubmitPayload) => {
+    if (isPending) return;
+    setValidationError(null);
+
+    // Sync draft state in case of server rejection or retry
+    setSelectedBuildingId(payload.buildingId);
+    setSelectedFloor(payload.floor);
+    setCategory(payload.category);
+    setDescription(payload.description);
+    if (payload.specificLocation) setSpecificLocation(payload.specificLocation);
+
+    const bldg = buildings.find((b) => b.id === payload.buildingId) || targetBuilding;
+    const bldgMax = typeof bldg.total_floors === 'number' ? bldg.total_floors : null;
+    const fNum = payload.floor && payload.floor !== 'G' && payload.floor !== 'unknown' ? parseInt(payload.floor, 10) : null;
+
+    if (bldgMax !== null && fNum !== null && !isNaN(fNum) && fNum > bldgMax) {
+      setValidationError(
+        locale === 'ms'
+          ? `Tingkat ${payload.floor} melebihi had tingkat bagi ${bldg.name} (${bldgMax} tingkat).`
+          : `Floor ${payload.floor} exceeds floor limit for ${bldg.name} (${bldgMax} floors).`
+      );
+      return;
+    }
+
+    const fd = new FormData();
+
+    // Attach all files
+    for (const file of payload.files) {
+      fd.append('photos', file, file.name);
+    }
+
+    if (clientReportId) {
+      fd.set('client_report_id', clientReportId);
+    }
+    fd.set('category', payload.category);
+    fd.set('building_id', payload.buildingId);
+    fd.set('urgency_hint', 'medium');
+
+    // Resolve matching zone for this building and floor (null for G and unknown)
+    let effectiveZone = '';
+    if (fNum !== null && !isNaN(fNum)) {
+      const bldgZones = zones.filter((z) => !z.building_id || z.building_id === bldg.id);
+      const matchedZone = bldgZones.find(
+        (z) => typeof z.floor_start === 'number' && typeof z.floor_end === 'number' && fNum >= z.floor_start && fNum <= z.floor_end
+      );
+      if (matchedZone) {
+        effectiveZone = matchedZone.id;
+      }
+    }
+
+    if (effectiveZone) {
+      fd.set('service_zone_id', effectiveZone);
+    } else {
+      fd.delete('service_zone_id');
+    }
+
+    // Direct description from single source of truth without double headers
+    fd.set('description', payload.description);
+
+    formAction(fd);
   };
 
   // Post-submit: Start new report cleanly
@@ -1092,10 +1156,7 @@ export function LaporForm({
         selectedImages={selectedImages}
         onAddImages={validateAndAddFiles}
         onRemoveImage={removeFile}
-        onSubmit={() => {
-          const fd = new FormData();
-          handleSubmitReport(fd);
-        }}
+        onSubmit={handleGuidedSubmit}
         isSubmitting={isPending}
         validationError={validationError || (state && !state.success ? (state.error ?? null) : null)}
         setValidationError={setValidationError}
