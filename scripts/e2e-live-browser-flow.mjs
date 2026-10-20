@@ -67,7 +67,7 @@ async function runFullE2ETest() {
 
     // A. Login Resident
     console.log('A. Navigating to Login page...');
-    await page.goto(`${STAGING_URL}/login`, { waitUntil: 'networkidle', timeout: 30000 });
+    await page.goto(`${STAGING_URL}/login`, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.fill('input[type="email"]', RESIDENT_EMAIL);
     await page.fill('input[type="password"]', RESIDENT_PASS);
     await page.click('button[type="submit"]');
@@ -77,7 +77,7 @@ async function runFullE2ETest() {
 
     // B. Open Aduan Berpandu
     console.log('B. Navigating to /resident/lapor...');
-    await page.goto(`${STAGING_URL}/resident/lapor`, { waitUntil: 'networkidle', timeout: 30000 });
+    await page.goto(`${STAGING_URL}/resident/lapor`, { waitUntil: 'domcontentloaded', timeout: 30000 });
     const guidedBtn = page.locator('button').filter({ hasText: 'Aduan berpandu' }).first();
     await guidedBtn.waitFor({ state: 'visible', timeout: 10000 });
     await guidedBtn.click();
@@ -116,7 +116,7 @@ async function runFullE2ETest() {
     await page.waitForSelector('text=Langkah 3 daripada 4', { timeout: 10000 });
 
     // Set file input directly
-    const galleryInput = page.locator('input[type="file"]').first();
+    const galleryInput = page.locator('input[type="file"][multiple]').first();
     await galleryInput.setInputFiles([FIXTURE_1_PATH, FIXTURE_2_PATH]);
     await page.waitForTimeout(1000);
 
@@ -254,14 +254,14 @@ async function runFullE2ETest() {
   try {
     // P. Login Manager
     console.log('P. Manager logging in...');
-    await mgrPage.goto(`${STAGING_URL}/login`, { waitUntil: 'networkidle', timeout: 30000 });
+    await mgrPage.goto(`${STAGING_URL}/login`, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await mgrPage.fill('input[type="email"]', MANAGER_EMAIL);
     await mgrPage.fill('input[type="password"]', MANAGER_PASS);
     await mgrPage.click('button[type="submit"]');
 
-    await mgrPage.waitForURL('**/management/**', { timeout: 30000 });
+    await mgrPage.waitForURL(/\/management/, { timeout: 30000 });
     console.log('Manager logged in. Navigating to inbox...');
-    await mgrPage.goto(`${STAGING_URL}/management/inbox`, { waitUntil: 'networkidle', timeout: 30000 });
+    await mgrPage.goto(`${STAGING_URL}/management/inbox`, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
     // Q. Scope locator to that exact report card
     console.log(`Q. Scoping locator to report card ${submittedReportId}...`);
