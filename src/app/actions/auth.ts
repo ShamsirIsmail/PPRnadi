@@ -82,3 +82,92 @@ export async function logoutAction(): Promise<void> {
   }
   redirect('/login');
 }
+
+export type DemoRole = 'resident' | 'management';
+
+export async function demoLoginAction(role: DemoRole): Promise<LoginActionResult> {
+  // 1. Explicit server environment flag check
+  if (process.env.ENABLE_DEMO_LOGIN !== 'true') {
+    return { error: 'Log masuk demo dimatikan pada persekitaran ini.' };
+  }
+
+  // 2. Strict whitelist validation: only 'resident' or 'management' accepted
+  if (role !== 'resident' && role !== 'management') {
+    return { error: 'Pilihan peranan demo tidak sah.' };
+  }
+
+  // 3. Rate limiting check (cookie HMAC + IP tracking)
+  const { checkDemoRateLimit } = await import('../../lib/auth/demo-rate-limiter');
+  const rateLimitResult = await checkDemoRateLimit();
+  if (!rateLimitResult.allowed) {
+    return {
+      error:
+        rateLimitResult.message ||
+        'Had percubaan log masuk demo dicapai. Sila tunggu sebentar sebelum mencuba lagi.',
+    };
+  }
+
+  // 4. Resolve credentials from SERVER environment only (no hardcoded credentials)
+  let email: string;
+  let password: string | undefined;
+  let targetUrl: string;
+  let expectedRole: 'resident' | 'management';
+
+  if (role === 'resident') {
+    email = 'resident.rejang@nadi.local';
+    password = process.env.STAGING_RESIDENT_PASSWORD || process.env.DEMO_RESIDENT_PASSWORD;
+    targetUrl = '/resident';
+    expectedRole = 'resident';
+  } else {
+    email = 'manager.rejang@nadi.local';
+    password = process.env.STAGING_MANAGER_PASSWORD || process.env.DEMO_MANAGER_PASSWORD;
+    targetUrl = '/management';
+    expectedRole = 'management';
+  }
+
+  if (!password) {
+    return {
+      error: 'Konfigurasi kata laluan akaun demo belum ditetapkan pada pelayan.',
+    };
+  }
+
+  // 5. Standard Supabase Auth signInWithPassword and session cookie management
+  let redirectTo: string | null = null;
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error || !data.user) {
+      return { error: 'Log masuk gagal: E-mel atau kata laluan akaun demo tidak sah.' };
+    }
+
+    // 6. Confirm authoritative role from database profiles table
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single();
+
+    if (!profile || profile.role !== expectedRole) {
+      // Abort and sign out if role doesn't match expected profile
+      await supabase.auth.signOut();
+      return { error: 'Akaun tidak mempunyai profil atau peranan yang sepadan.' };
+    }
+
+    redirectTo = targetUrl;
+  } catch (err: unknown) {
+    if ((err as Error)?.message?.includes('NEXT_REDIRECT')) {
+      throw err;
+    }
+    return { error: 'Ralat pelayan semasa log masuk demo. Sila cuba sebentar lagi.' };
+  }
+
+  if (redirectTo) {
+    redirect(redirectTo);
+  }
+
+  return { success: true };
+}
