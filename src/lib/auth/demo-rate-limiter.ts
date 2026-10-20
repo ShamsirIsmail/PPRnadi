@@ -37,11 +37,16 @@ export interface RateLimitCheckResult {
  */
 export async function checkDemoRateLimit(): Promise<RateLimitCheckResult> {
   const now = Date.now();
-  const headerList = await headers();
-  const forwardedFor = headerList.get('x-forwarded-for');
-  const rawIp = forwardedFor
-    ? forwardedFor.split(',')[0].trim()
-    : headerList.get('x-real-ip') || 'unknown';
+  let rawIp = 'unknown';
+  try {
+    const headerList = await headers();
+    const forwardedFor = headerList.get('x-forwarded-for');
+    rawIp = forwardedFor
+      ? forwardedFor.split(',')[0].trim()
+      : headerList.get('x-real-ip') || 'unknown';
+  } catch {
+    rawIp = 'unknown-context';
+  }
   const ipHash = crypto.createHash('sha256').update(rawIp).digest('hex').substring(0, 16);
 
   // 1. Check in-memory cache first (same container fast path)
@@ -55,13 +60,20 @@ export async function checkDemoRateLimit(): Promise<RateLimitCheckResult> {
     }
   }
 
-  // 2. Check signed cookie (cross-container distributed state)
-  const cookieStore = await cookies();
-  const existingCookie = cookieStore.get(RATE_LIMIT_COOKIE)?.value;
-  const secret = getSecretKey();
+  // 2. Base initial attempts on in-memory count if active
+  let attempts = memEntry && now - memEntry.windowStart < WINDOW_MS ? memEntry.attempts + 1 : 1;
+  let windowStart = memEntry && now - memEntry.windowStart < WINDOW_MS ? memEntry.windowStart : now;
 
-  let attempts = 1;
-  let windowStart = now;
+  // 3. Check signed cookie (cross-container distributed state)
+  let cookieStore: Awaited<ReturnType<typeof cookies>> | null = null;
+  try {
+    cookieStore = await cookies();
+  } catch {
+    cookieStore = null;
+  }
+
+  const existingCookie = cookieStore?.get(RATE_LIMIT_COOKIE)?.value;
+  const secret = getSecretKey();
 
   if (existingCookie) {
     const parts = existingCookie.split(':');
@@ -86,7 +98,7 @@ export async function checkDemoRateLimit(): Promise<RateLimitCheckResult> {
                 message: 'Had percubaan log masuk demo dicapai. Sila tunggu sebentar sebelum mencuba lagi.',
               };
             }
-            attempts = parsedAttempts + 1;
+            attempts = Math.max(attempts, parsedAttempts + 1);
             windowStart = parsedWindowStart;
           } else {
             // Window expired, start new window
