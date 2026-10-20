@@ -2,7 +2,9 @@ import { createRequire } from 'module';
 import fs from 'fs';
 import path from 'path';
 
-if (fs.existsSync('.env.local')) {
+if (fs.existsSync('.env.staging.local')) {
+  process.loadEnvFile('.env.staging.local');
+} else if (fs.existsSync('.env.local')) {
   process.loadEnvFile('.env.local');
 }
 
@@ -10,8 +12,7 @@ const req = createRequire(process.cwd() + '/package.json');
 const { chromium } = req('playwright-core');
 
 const CHROME_PATH = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const RESIDENT_PASSWORD = process.env.DEMO_RESIDENT_PASSWORD || 'PPRnadi@2026';
-const BASE_URL = 'https://localhost:3000';
+const TARGET_URL = process.env.CAPTURE_URL || 'https://ppr-nadi-staging.vercel.app';
 const ARTIFACT_DIR = 'C:/Users/shams/.gemini/antigravity-ide/brain/f73c5ee6-76ec-4b98-ac3e-6e23b5a34c2a';
 
 async function main() {
@@ -36,16 +37,24 @@ async function main() {
 
   const page = await context.newPage();
 
-  console.log('1. Logging in as resident Farid...');
-  await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle' });
-  await page.locator('button', { hasText: 'Penduduk Desa Rejang' }).click();
-  await page.locator('input[type="password"]').fill(RESIDENT_PASSWORD);
-  await page.locator('#login-submit-btn').click();
-  await page.waitForURL('**/resident', { timeout: 15000 });
+  console.log(`1. Logging in on ${TARGET_URL}...`);
+  await page.goto(`${TARGET_URL}/login`, { waitUntil: 'networkidle' });
+
+  if (TARGET_URL.includes('vercel.app')) {
+    await page.fill('input[type="email"]', 'resident.rejang@nadi.local');
+    await page.fill('input[type="password"]', process.env.STAGING_RESIDENT_PASSWORD);
+    await page.click('button[type="submit"]');
+  } else {
+    await page.locator('button', { hasText: 'Penduduk Desa Rejang' }).click();
+    await page.locator('input[type="password"]').fill(process.env.DEMO_RESIDENT_PASSWORD || 'PPRnadi@2026');
+    await page.locator('#login-submit-btn').click();
+  }
+
+  await page.waitForURL(url => url.pathname.includes('/resident'), { timeout: 15000 });
 
   // 2. Go to /resident/lapor
   console.log('2. Navigating to /resident/lapor...');
-  await page.goto(`${BASE_URL}/resident/lapor`, { waitUntil: 'networkidle' });
+  await page.goto(`${TARGET_URL}/resident/lapor`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(500);
 
   // Capture Mula Aduan (390px)
