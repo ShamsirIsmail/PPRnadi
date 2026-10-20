@@ -128,13 +128,15 @@ export async function checkDemoRateLimit(): Promise<RateLimitCheckResult> {
   const cookieValue = `${newPayload}:${newSignature}`;
 
   try {
-    cookieStore.set(RATE_LIMIT_COOKIE, cookieValue, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 120, // 2 minutes
-    });
+    if (cookieStore) {
+      cookieStore.set(RATE_LIMIT_COOKIE, cookieValue, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 120, // 2 minutes
+      });
+    }
   } catch {
     // If called outside mutable cookie scope, in-memory cache remains active
   }
