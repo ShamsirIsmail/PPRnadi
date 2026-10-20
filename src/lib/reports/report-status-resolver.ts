@@ -1,4 +1,4 @@
-import type { IncidentReportRow, IncidentStatus } from '@/types/database';
+import type { IncidentStatus, ReportStatus } from '@/types/database';
 
 /**
  * Determines whether a report is currently active (ongoing assessment or remediation).
@@ -6,7 +6,7 @@ import type { IncidentReportRow, IncidentStatus } from '@/types/database';
  * A linked report is active only if the linked incident is ongoing (or pending status).
  */
 export function isReportActive(
-  report: IncidentReportRow,
+  report: { status: ReportStatus },
   incidentStatus?: IncidentStatus | null
 ): boolean {
   if (report.status === 'dismissed') {
@@ -29,10 +29,10 @@ export function isReportActive(
  * Selects the most relevant active report from the resident's report history.
  * If the latest report is dismissed, this continues searching for any older active report.
  */
-export function selectPrimaryActiveReport(
-  reports: IncidentReportRow[],
+export function selectPrimaryActiveReport<T extends { id: string; status: ReportStatus }>(
+  reports: T[],
   incidentMap?: Record<string, { status: IncidentStatus }>
-): IncidentReportRow | null {
+): T | null {
   if (!reports || reports.length === 0) return null;
 
   for (const report of reports) {
@@ -62,7 +62,7 @@ export interface ReportProgressEvaluation {
  * - 'linked' alone does NOT mark 'Tindakan' or 'Selesai' unless incident status verifies it.
  */
 export function evaluateReportProgress(
-  report: IncidentReportRow,
+  report: { status: ReportStatus },
   incidentStatus?: IncidentStatus | null
 ): ReportProgressEvaluation {
   if (report.status === 'dismissed') {

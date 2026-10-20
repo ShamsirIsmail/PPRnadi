@@ -55,3 +55,7 @@ next-env.d.ts
 
 .vercel
 .env*
+
+preview_*.png
+public/nadi-*-preview.html
+scripts/capture-preview-screenshots.mjs
