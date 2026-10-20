@@ -94,14 +94,16 @@ export function buildDeterministicSummary(facts: ReportSummaryFacts): string {
       ? (locale === 'ms' ? 'Lampu koridor' : 'Corridor lighting')
       : (locale === 'ms' ? 'Lain-lain' : 'Other');
 
+  const prep = locale === 'ms' ? 'di' : 'at';
+
   if (category === 'other') {
     const mainText = extraText?.trim() || '';
-    return `${catLabel} di ${loc}${specific}. ${mainText}`.trim();
+    return `${catLabel} ${prep} ${loc}${specific}. ${mainText}`.trim();
   }
 
   const subLabel = subIssueId ? getSubIssueLabel(subIssueId, locale) : '';
   const detailText = subLabel ? ` · ${subLabel}` : '';
-  let summary = `${catLabel}${detailText} di ${loc}${specific}.`;
+  let summary = `${catLabel}${detailText} ${prep} ${loc}${specific}.`;
   if (extraText?.trim()) {
     summary += ` ${extraText.trim()}`;
   }

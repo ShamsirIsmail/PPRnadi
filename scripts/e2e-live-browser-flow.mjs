@@ -229,13 +229,36 @@ async function runFullE2ETest() {
   console.log(`M. Confirmed DB record matches UI report ID: ${dbReport.id}`);
 
   // N. Confirm final location Blok L, floor 14, correct zone, and no old location in description
-  console.log('N. Verifying location accuracy and absence of old Blok A...');
+  console.log('N. Verifying location accuracy, zone bounds, and absence of old Blok A...');
   assert(dbReport.building?.name === 'Blok L', `Expected building Blok L, got ${dbReport.building?.name}`);
   assert(!dbReport.description.includes('Blok A'), 'Description must NEVER contain old Blok A location');
   assert(dbReport.description.includes('Blok L, Tingkat 14'), 'Description must contain final location Blok L, Tingkat 14');
   assert(dbReport.description.includes('Lif · Pintu bermasalah'), 'Description must contain category and sub-issue');
   assert(dbReport.category === 'lift', 'Category must be lift');
-  console.log('✓ Database location, category, and description are 100% consistent with UI submission');
+
+  // Verify service zone assertions:
+  // 1. service_zone_id belongs to the same building_id
+  // 2. Zone range covers selected floor (floor 14)
+  if (dbReport.service_zone_id) {
+    const { data: dbZone, error: zoneErr } = await supabaseAdmin
+      .from('service_zones')
+      .select('*')
+      .eq('id', dbReport.service_zone_id)
+      .single();
+    assert(!zoneErr && dbZone, `Failed to load zone ${dbReport.service_zone_id}: ${zoneErr?.message}`);
+    assert(
+      !dbZone.building_id || dbZone.building_id === dbReport.building_id,
+      `Zone building_id mismatch: expected ${dbReport.building_id}, got ${dbZone.building_id}`
+    );
+    if (typeof dbZone.floor_start === 'number' && typeof dbZone.floor_end === 'number') {
+      assert(
+        14 >= dbZone.floor_start && 14 <= dbZone.floor_end,
+        `Zone floor bounds [${dbZone.floor_start}, ${dbZone.floor_end}] do not cover floor 14!`
+      );
+    }
+    console.log(`✓ Confirmed service zone ${dbZone.name} belongs to Blok L and strictly covers floor 14`);
+  }
+  console.log('✓ Database location, category, zone, and description are 100% consistent with UI submission');
 
   // O. Assert exactly two attachments
   console.log('O. Checking attachments in database...');
@@ -310,31 +333,33 @@ async function runFullE2ETest() {
   assert(!alienLoginErr && alienAuth?.user, `Alien resident login failed: ${alienLoginErr?.message}`);
   console.log(`Alien resident authenticated. User ID: ${alienAuth.user.id}`);
 
-  // Test 1: Cannot read Desa Rejang report
+  // Test 1: Query Desa Rejang report
   console.log('Testing: Alien resident cannot read Desa Rejang report...');
-  const { data: alienReportRead } = await alienClient
+  const { data: alienReportRead, error: alienReadErr } = await alienClient
     .from('incident_reports')
     .select('*')
     .eq('id', submittedReportId);
 
+  assert(!alienReadErr, `Query encountered database error rather than RLS filtering: ${alienReadErr?.message}`);
   assert(
-    !alienReportRead || alienReportRead.length === 0,
-    'RLS Violation: Alien resident was able to read Desa Rejang report!'
+    Array.isArray(alienReportRead) && alienReportRead.length === 0,
+    `RLS Violation: Alien resident was able to read Desa Rejang report! Returned ${alienReportRead?.length} rows.`
   );
-  console.log('✓ Alien resident read query returned 0 rows (denied by RLS)');
+  console.log('✓ Alien resident read query executed cleanly and returned exactly 0 rows (isolated by RLS)');
 
   // Test 2: Cannot read attachment metadata
   console.log('Testing: Alien resident cannot read attachment metadata...');
-  const { data: alienAtts } = await alienClient
+  const { data: alienAtts, error: alienAttsErr } = await alienClient
     .from('report_attachments')
     .select('*')
     .eq('report_id', submittedReportId);
 
+  assert(!alienAttsErr, `Attachment query failed with error: ${alienAttsErr?.message}`);
   assert(
-    !alienAtts || alienAtts.length === 0,
-    'RLS Violation: Alien resident was able to read report attachments metadata!'
+    Array.isArray(alienAtts) && alienAtts.length === 0,
+    `RLS Violation: Alien resident was able to read report attachments metadata! Returned ${alienAtts?.length} rows.`
   );
-  console.log('✓ Alien resident attachment query returned 0 rows (denied by RLS)');
+  console.log('✓ Alien resident attachment query executed cleanly and returned exactly 0 rows (isolated by RLS)');
 
   // Test 3: Cannot download storage objects
   console.log('Testing: Alien resident cannot download Desa Rejang storage image...');
@@ -348,7 +373,7 @@ async function runFullE2ETest() {
 
   // Test 4: Cannot submit report to Desa Rejang building
   console.log('Testing: Alien resident cannot submit report to Desa Rejang building...');
-  const { error: alienInsertErr } = await alienClient
+  const { data: alienInsertData, error: alienInsertErr } = await alienClient
     .from('incident_reports')
     .insert({
       reporter_id: alienAuth.user.id,
@@ -356,10 +381,15 @@ async function runFullE2ETest() {
       category: 'water_supply',
       description: 'Cubaan aduan penduduk kawasan lain ke Desa Rejang',
       status: 'submitted',
-    });
+    })
+    .select();
 
-  assert(Boolean(alienInsertErr), 'Security Violation: Alien resident was able to insert report for Desa Rejang building!');
-  console.log(`✓ Alien report submission rejected: ${alienInsertErr.message}`);
+  if (!alienInsertErr && alienInsertData && alienInsertData.length > 0) {
+    const leakedId = alienInsertData[0].id;
+    throw new Error(`CRITICAL SECURITY FAILURE: Alien resident was able to insert report for Desa Rejang building! Created mutation ID: ${leakedId}`);
+  }
+  assert(Boolean(alienInsertErr), 'Security Violation: Alien resident report insertion did not fail as expected!');
+  console.log(`✓ Alien report submission strictly rejected by policy: ${alienInsertErr.message}`);
 
   // -------------------------------------------------------------------------
   // PHASE 5: UNAUTHENTICATED STORAGE ACCESS TEST

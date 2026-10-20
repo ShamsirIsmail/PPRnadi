@@ -42,6 +42,15 @@ describe('Guided 4-Step Flow & Real Architecture Verification', () => {
     expect(payload.description).toContain('Lif · Pintu bermasalah di Blok L, Tingkat 14 (Koridor sayap kiri).');
     expect(payload.description).toContain('Pintu tersekat-sekat bila ditutup');
     expect(payload.description).not.toContain('[Lokasi:'); // No redundant stacked headers
+
+    // English summary verification (ensures 'at' replaces 'di')
+    const enFacts: ReportSummaryFacts = {
+      ...facts,
+      locale: 'en',
+    };
+    const enSummary = buildDeterministicSummary(enFacts);
+    expect(enSummary).toContain('Elevator · Door problem at Blok L, Floor 14 (Koridor sayap kiri).');
+    expect(enSummary).not.toContain(' di ');
   });
 
   // Kes Wajib 2: Ubah lokasi selepas semakan membuang lokasi lama
@@ -145,15 +154,15 @@ describe('Guided 4-Step Flow & Real Architecture Verification', () => {
     expect(unknownFloorTextEn).toBe('Blok A, Floor uncertain');
     expect(unknownFloorTextEn).not.toContain('Floor 1');
 
-    // Numerical parsing of G or unknown yields null
+    // Numerical parsing of G or unknown yields null and never matches a floor-range zone
     for (const special of ['G', 'unknown']) {
       const parsedNum = special !== 'G' && special !== 'unknown' ? parseInt(special, 10) : null;
       expect(parsedNum).toBeNull();
     }
   });
 
-  // Kes Wajib 7: Zon lama tidak kekal selepas blok berubah
-  it('Kes Wajib 7: previous zone does not persist when selected block changes', () => {
+  // Kes Wajib 7: Zon lama tidak kekal selepas blok berubah & zon disahkan padan
+  it('Kes Wajib 7: previous zone does not persist when selected block changes and zone strictly matches building and floor bounds', () => {
     const allZones = [
       { id: 'zone-a-low', building_id: 'bld-a', floor_start: 1, floor_end: 9 },
       { id: 'zone-a-high', building_id: 'bld-a', floor_start: 10, floor_end: 18 },
@@ -168,17 +177,24 @@ describe('Guided 4-Step Flow & Real Architecture Verification', () => {
       const matched = allZones.find(
         (z) => z.building_id === buildingId && fNum >= z.floor_start && fNum <= z.floor_end
       );
-      return matched ? matched.id : null;
+      return matched || null;
     };
 
     // When at Blok A, floor 18:
     const zoneBlokA = resolveZone('bld-a', '18');
-    expect(zoneBlokA).toBe('zone-a-high');
+    expect(zoneBlokA?.id).toBe('zone-a-high');
+    expect(zoneBlokA?.building_id).toBe('bld-a');
 
     // Switch to Blok L, floor 14:
     const zoneBlokL = resolveZone('bld-l', '14');
-    expect(zoneBlokL).toBe('zone-l-high');
-    expect(zoneBlokL).not.toBe('zone-a-high'); // Old zone discarded!
+    expect(zoneBlokL?.id).toBe('zone-l-high');
+    expect(zoneBlokL?.building_id).toBe('bld-l');
+    expect(zoneBlokL?.id).not.toBe('zone-a-high'); // Old zone discarded!
+    expect(14 >= zoneBlokL!.floor_start && 14 <= zoneBlokL!.floor_end).toBe(true);
+
+    // G and unknown floors receive null zone (no fake floor zone)
+    expect(resolveZone('bld-l', 'G')).toBeNull();
+    expect(resolveZone('bld-l', 'unknown')).toBeNull();
 
     // Floor bounds check: Blok L has max 15 floors; floor 18 is out of bounds
     const maxFloorsL = 15;

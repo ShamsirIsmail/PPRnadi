@@ -22,7 +22,7 @@ function getCachedProfile(): CachedProfileState | undefined {
 
 export function ResidentBottomNav() {
   const pathname = usePathname();
-  const { t } = useTranslation();
+  const { locale } = useTranslation();
 
   const isHome = pathname === '/resident';
   const isReports = pathname.startsWith('/resident/sejarah');
@@ -99,36 +99,42 @@ export function ResidentBottomNav() {
           {/* Tab 1: Utama / Home */}
           <Link
             href="/resident"
-            aria-current={isHome ? 'page' : undefined}
-            className={`flex flex-col items-center justify-center gap-1 min-h-[48px] transition-colors cursor-pointer ${
-              isHome
-                ? 'text-[#1956b8] font-bold'
-                : 'text-[#64748b] hover:text-[#1956b8]'
+            aria-current={isHome && !isAccountOpen ? 'page' : undefined}
+            className={`relative flex flex-col items-center justify-center gap-1 min-h-[48px] transition-all duration-200 cursor-pointer ${
+              isHome && !isAccountOpen
+                ? 'bg-[#f0f5fd] text-[#1554ad] font-bold'
+                : 'text-slate-600 hover:text-[#1554ad] hover:bg-slate-50'
             }`}
           >
-            <Home className={`w-5 h-5 ${isHome ? 'stroke-[2.5]' : 'stroke-2'}`} />
-            <span className={`text-[11px] sm:text-xs ${isHome ? 'font-bold' : 'font-semibold'}`}>
-              {t.residentHome.navHome}
+            {isHome && !isAccountOpen && (
+              <span className="absolute top-0 left-1/4 right-1/4 h-[3px] bg-[#1554ad] rounded-b-md" />
+            )}
+            <Home className="w-5 h-5 stroke-2" />
+            <span className="text-[11px] sm:text-xs leading-none font-bold">
+              {locale === 'ms' ? 'Utama' : 'Home'}
             </span>
           </Link>
 
           {/* Tab 2: Aduan Saya / My Reports */}
           <Link
             href="/resident/sejarah"
-            aria-current={isReports ? 'page' : undefined}
-            className={`flex flex-col items-center justify-center gap-1 min-h-[48px] transition-colors cursor-pointer ${
-              isReports
-                ? 'text-[#1956b8] font-bold'
-                : 'text-[#64748b] hover:text-[#1956b8]'
+            aria-current={isReports && !isAccountOpen ? 'page' : undefined}
+            className={`relative flex flex-col items-center justify-center gap-1 min-h-[48px] transition-all duration-200 cursor-pointer ${
+              isReports && !isAccountOpen
+                ? 'bg-[#f0f5fd] text-[#1554ad] font-bold'
+                : 'text-slate-600 hover:text-[#1554ad] hover:bg-slate-50'
             }`}
           >
-            <ClipboardList className={`w-5 h-5 ${isReports ? 'stroke-[2.5]' : 'stroke-2'}`} />
-            <span className={`text-[11px] sm:text-xs ${isReports ? 'font-bold' : 'font-semibold'}`}>
-              {t.residentHome.navReports}
+            {isReports && !isAccountOpen && (
+              <span className="absolute top-0 left-1/4 right-1/4 h-[3px] bg-[#1554ad] rounded-b-md" />
+            )}
+            <ClipboardList className="w-5 h-5 stroke-2" />
+            <span className="text-[11px] sm:text-xs leading-none font-bold">
+              {locale === 'ms' ? 'Aduan Saya' : 'My Reports'}
             </span>
           </Link>
 
-          {/* Tab 3: Akaun / Account (Opens resident profile & sign out sheet) */}
+          {/* Tab 3: Akaun / Account */}
           <button
             type="button"
             onClick={() => {
@@ -137,16 +143,20 @@ export function ResidentBottomNav() {
               if (cached?.building) setBuilding(cached.building);
               setIsAccountOpen(true);
             }}
-            aria-label={t.residentHome.navAccount}
-            className={`flex flex-col items-center justify-center gap-1 min-h-[48px] transition-colors cursor-pointer ${
+            aria-current={isAccountOpen ? 'page' : undefined}
+            aria-label={locale === 'ms' ? 'Akaun' : 'Account'}
+            className={`relative flex flex-col items-center justify-center gap-1 min-h-[48px] transition-all duration-200 cursor-pointer ${
               isAccountOpen
-                ? 'text-[#1956b8] font-bold'
-                : 'text-[#64748b] hover:text-[#1956b8]'
+                ? 'bg-[#f0f5fd] text-[#1554ad] font-bold'
+                : 'text-slate-600 hover:text-[#1554ad] hover:bg-slate-50'
             }`}
           >
-            <UserRound className={`w-5 h-5 ${isAccountOpen ? 'stroke-[2.5]' : 'stroke-2'}`} />
-            <span className={`text-[11px] sm:text-xs ${isAccountOpen ? 'font-bold' : 'font-semibold'}`}>
-              {t.residentHome.navAccount}
+            {isAccountOpen && (
+              <span className="absolute top-0 left-1/4 right-1/4 h-[3px] bg-[#1554ad] rounded-b-md" />
+            )}
+            <UserRound className="w-5 h-5 stroke-2" />
+            <span className="text-[11px] sm:text-xs leading-none font-bold">
+              {locale === 'ms' ? 'Akaun' : 'Account'}
             </span>
           </button>
         </div>

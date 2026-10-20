@@ -14,8 +14,40 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'PPR NADI | Infrastruktur & Kesinambungan Komuniti',
-  description: 'Platform komuniti perumahan awam PPR untuk pelaporan kerosakan dan notis rasmi pengurusan.',
+  metadataBase: new URL('https://ppr-nadi-staging.vercel.app'),
+  title: 'PPR NADI | Suara Komuniti. Nadi Perubahan.',
+  description: 'Platform komuniti perumahan awam PPR untuk pelaporan kerosakan fasiliti dan penyampaian notis rasmi pengurusan.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon.png', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-icon.png' },
+    ],
+  },
+  openGraph: {
+    title: 'PPR NADI | Suara Komuniti. Nadi Perubahan.',
+    description: 'Platform komuniti perumahan awam PPR untuk pelaporan kerosakan fasiliti dan penyampaian notis rasmi pengurusan.',
+    url: 'https://ppr-nadi-staging.vercel.app',
+    siteName: 'PPR NADI',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'PPR NADI — Suara Komuniti. Nadi Perubahan.',
+      },
+    ],
+    locale: 'ms_MY',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'PPR NADI | Suara Komuniti. Nadi Perubahan.',
+    description: 'Platform komuniti perumahan awam PPR untuk pelaporan kerosakan fasiliti dan penyampaian notis rasmi pengurusan.',
+    images: ['/og-image.png'],
+  },
 };
 
 export default function RootLayout({

@@ -20,11 +20,17 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
-
-  const isLocalEnv =
-    process.env.NODE_ENV === 'development' ||
-    process.env.NEXT_PUBLIC_ENABLE_LOCAL_DEMO === 'true';
+  const [isDemoVisible] = useState(() => {
+    return (
+      process.env.NODE_ENV === 'development' ||
+      process.env.NEXT_PUBLIC_ENABLE_LOCAL_DEMO === 'true' ||
+      process.env.NEXT_PUBLIC_STAGING === 'true' ||
+      (typeof window !== 'undefined' &&
+        (window.location.hostname.includes('staging') ||
+          window.location.hostname.includes('vercel.app') ||
+          window.location.hostname === 'localhost'))
+    );
+  });
 
   const fillDemoEmail = (demoEmail: string) => {
     setEmail(demoEmail);
@@ -301,42 +307,28 @@ export default function LoginPage() {
               <span>{t.auth.contactManagement}</span>
             </p>
 
-            {/* Local Demo Shortcuts (Development / Demo Environment Only) */}
-            {isLocalEnv && (
-              <div className="mt-4 pt-3.5 border-t border-[#e2e8f0]">
-                <p className="text-center text-[11px] font-bold text-[#64748b] uppercase tracking-wider mb-2">
-                  {locale === 'ms' ? 'Akaun Ujian Demo (Desa Rejang & Sentosa)' : 'Quick Demo Accounts (Desa Rejang & Sentosa)'}
+            {/* Demo Buttons (For testing and demonstration only) */}
+            {isDemoVisible && (
+              <div className="mt-5 pt-4 border-t border-[#e2e8f0]">
+                <p className="text-center text-[11px] font-bold text-[#64748b] uppercase tracking-wider mb-2.5 font-['Manrope',Arial,sans-serif]">
+                  {locale === 'ms'
+                    ? 'Untuk ujian dan demonstrasi sahaja'
+                    : 'For testing and demonstration only'}
                 </p>
-                <div className="grid grid-cols-2 gap-2 mb-2">
+                <div className="grid grid-cols-2 gap-2.5">
                   <button
                     type="button"
                     onClick={() => fillDemoEmail('resident.rejang@nadi.local')}
-                    className="py-2 px-2.5 rounded-xl border border-[#b6d2fe] bg-[#edf4ff] hover:bg-[#dce9fd] text-xs font-bold text-[#1554ad] transition-colors cursor-pointer text-center font-['Manrope',Arial,sans-serif]"
+                    className="min-h-[44px] py-2.5 px-3 rounded-xl border border-[#b6d2fe] bg-[#edf4ff] hover:bg-[#dce9fd] text-xs font-bold text-[#1554ad] transition-colors cursor-pointer text-center font-['Manrope',Arial,sans-serif]"
                   >
-                    {locale === 'ms' ? 'Penduduk Desa Rejang (Blok A T17)' : 'Resident Desa Rejang (Blk A F17)'}
+                    {locale === 'ms' ? 'Penduduk' : 'Resident'}
                   </button>
                   <button
                     type="button"
                     onClick={() => fillDemoEmail('manager.rejang@nadi.local')}
-                    className="py-2 px-2.5 rounded-xl border border-[#b6d2fe] bg-[#edf4ff] hover:bg-[#dce9fd] text-xs font-bold text-[#1554ad] transition-colors cursor-pointer text-center font-['Manrope',Arial,sans-serif]"
+                    className="min-h-[44px] py-2.5 px-3 rounded-xl border border-[#b6d2fe] bg-[#edf4ff] hover:bg-[#dce9fd] text-xs font-bold text-[#1554ad] transition-colors cursor-pointer text-center font-['Manrope',Arial,sans-serif]"
                   >
-                    {locale === 'ms' ? 'Pengurus Desa Rejang' : 'Manager Desa Rejang'}
-                  </button>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => fillDemoEmail('resident@sentosa.local')}
-                    className="flex-1 py-1.5 px-2 rounded-lg border border-[#e2e8f0] bg-[#f8fafc] hover:bg-[#f1f5f9] text-[11px] font-medium text-[#64748b] transition-colors cursor-pointer text-center font-['Manrope',Arial,sans-serif]"
-                  >
-                    {locale === 'ms' ? 'Penduduk Sentosa' : 'Resident Sentosa'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fillDemoEmail('manager@sentosa.local')}
-                    className="flex-1 py-1.5 px-2 rounded-lg border border-[#e2e8f0] bg-[#f8fafc] hover:bg-[#f1f5f9] text-[11px] font-medium text-[#64748b] transition-colors cursor-pointer text-center font-['Manrope',Arial,sans-serif]"
-                  >
-                    {locale === 'ms' ? 'Pengurus Sentosa' : 'Manager Sentosa'}
+                    {locale === 'ms' ? 'Pengurusan' : 'Management'}
                   </button>
                 </div>
               </div>

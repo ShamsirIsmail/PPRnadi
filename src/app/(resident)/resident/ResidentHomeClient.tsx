@@ -12,8 +12,11 @@ import {
   AlertTriangle,
   Info,
   CheckCircle2,
-  ShieldCheck,
+  LogOut,
+  Loader2,
+  Building2,
 } from 'lucide-react';
+import { logoutAction } from '@/app/actions/auth';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { resolveEstateName } from '@/lib/estate/estate-resolver';
 import {
@@ -57,6 +60,30 @@ export function ResidentHomeClient({
 }: ResidentHomeClientProps) {
   const { t, locale } = useTranslation();
   const [expandedNoticeId, setExpandedNoticeId] = useState<string | null>(null);
+  const [confirmLogout, setConfirmLogout] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [hasDraft] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return Boolean(sessionStorage.getItem('ppr_client_report_id'));
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  });
+
+  // Keyboard accessibility: Escape closes logout confirmation
+  React.useEffect(() => {
+    if (!confirmLogout) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isLoggingOut) {
+        setConfirmLogout(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [confirmLogout, isLoggingOut]);
 
   // Sync profile data to window and bottom nav modal in effect
   React.useEffect(() => {
@@ -166,22 +193,26 @@ export function ResidentHomeClient({
           </span>
         </div>
 
-        {/* Location & Unit Detail */}
-        <div className="mt-3.5 pt-3 border-t border-[#f1f5fa] flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
-          <div>
-            <strong className="text-[#17212f] font-bold block">{estateName}</strong>
-            <span className="text-[#586b84]">
-              {buildingName} {unitText ? `· ${unitText}` : ''}
-            </span>
+        {/* Location, Unit Detail & Log Keluar Action */}
+        <div className="mt-3.5 pt-3 border-t border-[#f1f5fa] flex items-center justify-between gap-2 text-xs sm:text-sm">
+          <div className="flex items-center gap-2 min-w-0">
+            <Building2 className="w-4 h-4 text-[#1554ad] shrink-0" />
+            <div className="truncate">
+              <strong className="text-[#17212f] font-bold block leading-tight truncate">{estateName}</strong>
+              <span className="text-[#586b84] text-xs truncate block">
+                {buildingName} {unitText ? `· ${unitText}` : ''}
+              </span>
+            </div>
           </div>
 
           <button
             type="button"
-            onClick={handleOpenAccount}
-            className="inline-flex items-center gap-1 text-xs font-bold text-[#1956b8] hover:underline cursor-pointer"
+            onClick={() => setConfirmLogout(true)}
+            aria-label={locale === 'ms' ? 'Log keluar' : 'Sign out'}
+            className="shrink-0 min-h-[44px] px-3.5 py-2 rounded-xl border border-red-200 bg-red-50/70 hover:bg-red-100/80 text-[#991b1b] font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
           >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>{t.residentHome.residentRoleBadge}</span>
+            <LogOut className="w-4 h-4 text-[#991b1b]" />
+            <span>{locale === 'ms' ? 'Log keluar' : 'Sign out'}</span>
           </button>
         </div>
 
@@ -576,6 +607,70 @@ export function ResidentHomeClient({
           {t.common.appName} • {t.auth.communityFooter}
         </p>
       </footer>
+
+      {/* Logout Confirmation Accessible Dialog */}
+      {confirmLogout && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-logout-title"
+          onClick={() => !isLoggingOut && setConfirmLogout(false)}
+        >
+          <div
+            className="w-full max-w-sm bg-white rounded-2xl shadow-xl border border-slate-200 p-6 space-y-4 animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 text-[#991b1b] flex items-center justify-center shrink-0">
+                <LogOut className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h2 id="confirm-logout-title" className="text-lg font-bold text-[#17212f]">
+                  {locale === 'ms' ? 'Anda mahu log keluar?' : 'Would you like to sign out?'}
+                </h2>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  {locale === 'ms'
+                    ? 'Anda boleh log masuk semula bila-bila masa.'
+                    : 'You can sign in again whenever you need.'}
+                </p>
+                {hasDraft && (
+                  <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded-lg font-medium">
+                    {locale === 'ms'
+                      ? 'Perhatian: Draf aduan yang belum dihantar akan dipadamkan.'
+                      : 'Note: Any unsent report draft will be cleared.'}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setConfirmLogout(false)}
+                disabled={isLoggingOut}
+                className="flex-1 min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 font-bold text-xs sm:text-sm hover:bg-slate-50 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {locale === 'ms' ? 'Kekal di sini' : 'Stay here'}
+              </button>
+              <form action={logoutAction} className="flex-1">
+                <button
+                  type="submit"
+                  disabled={isLoggingOut}
+                  onClick={() => setIsLoggingOut(true)}
+                  className="w-full min-h-[44px] px-4 py-2.5 rounded-xl bg-[#dc2626] hover:bg-[#b91c1c] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  {isLoggingOut ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <span>{locale === 'ms' ? 'Log keluar' : 'Sign out'}</span>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
